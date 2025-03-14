@@ -1,0 +1,55 @@
+= Invert numbers
+:experimental:
+:nofooter:
+:source-highlighter: pygments
+:sectnums:
+:stem: latexmath
+:toc:
+:xrefstyle: short
+
+
+[[problem_statement]]
+== Problem statement
+
+#El ejemplo programa inversor (_invert_) lee números enteros de la entrada estándar y los imprime en la salida estándar en el orden inverso. Su propósito es crear proyectos con el Makefile genérico. Se crea el proyecto en C, enunciado, casos de prueba, compilar, correr, probar, estilo de código (linting), y documentación (doxygen).#
+
+Input example:
+
+[source]
+----
+include::tests/input001.txt[]
+----
+
+Output example:
+
+[source]
+----
+include::tests/output001.txt[]
+----
+
+[[design]]
+== Design of solution
+
+#See the link:design/readme.adoc[design/] folder for an overall design of the solution.#
+
+
+[[user_manual]]
+== User manual
+
+[[build]]
+=== Build
+
+#Describe how to compile your solution.#
+
+[[usage]]
+=== Usage
+
+#Describe how to run your solution, e.g: arguments. Provide examples.#
+
+
+[[credits]]
+== Credits
+
+#Provide your contact information.#
+
+#Give credit to authors of libraries, images, sounds, or any resource you used.#
