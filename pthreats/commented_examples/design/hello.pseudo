@@ -1,0 +1,5 @@
+main:
+    print("Hello from main thread")
+
+    greet
+        print("Hello from secondarary thread")

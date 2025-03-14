@@ -1,0 +1,26 @@
+== Glosary
+
+=== Programacion serial
+=== Programacion Concurrente
+=== Programacion paralela
+=== Concurrencia de tareas
+=== Paralelismo de datos
+=== Hilo de ejecucion
+=== Indeterminismo
+=== Memoria privada y compartida
+=== Espera activa
+=== Condicion de carrera
+=== Control de concurrencia
+=== Seguridad condicional
+=== Exclusion mutua
+=== Semaforo
+=== Barrera
+=== Variable de condicion
+=== Candado de lectura y escritura
+=== Descomposicion
+=== Mapeo
+=== Incremento de velocidad
+=== Eficiencia
+=== Comunicacion punto a punto entre procesos
+=== Comunicacion colectiva entre procesos
+=== Reduccion

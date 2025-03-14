@@ -18,6 +18,7 @@ int main(void) {
 
   for(long index=count-1;index>=0;--index){
     printf("%ld", numbers[index]);
+    printf("\n");
   }
   return EXIT_SUCCESS;
 }
