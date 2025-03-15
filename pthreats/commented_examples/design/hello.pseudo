@@ -1,5 +1,10 @@
-main:
-    print("Hello from main thread")
+procedure main:
+//se esta "delegando" el trabajo para que main no haga todo
+  create_thread(greet)
+  print "Hello from main thread"
+end procedure
 
-    greet
-        print("Hello from secondarary thread")
+//un nuevo hilo de ejecucion que trabajara independientemente del hilo main
+procedure greet:
+  print "Hello from secondary thread"
+end procedure
