@@ -16,6 +16,7 @@ int main(void) {
     /*args*/  NULL);
   if (error == EXIT_SUCCESS) {
     printf("Hello from main thread\n");
+    // el hilo principal main "espera" a que el hilo segundario termine
     pthread_join(thread,  /*value_ptr*/  NULL);
   } else {
     // stderr imprime en un archivo de errores, es buena practica
