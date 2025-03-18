@@ -20,6 +20,7 @@ int main(void) {
     if (++count == capacity) {
       // Increase capacity of array
       capacity *= 10;
+      // TODO: (AGSQ): Report error if realloc returns NULL
       numbers = realloc(numbers, capacity* sizeof(long));
     }
   }
