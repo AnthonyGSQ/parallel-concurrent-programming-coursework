@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 void* greet(void* data);
 // procedure main:
@@ -16,6 +17,7 @@ int main(void) {
   int error = pthread_create(&thread,  /* attr */  NULL, greet,
     /*args*/  (void*)&number);
   if (error == EXIT_SUCCESS) {
+    sleep(2);
     printf("\nHello from main thread\n");
     // el hilo principal main "espera" a que el hilo segundario termine
     pthread_join(thread,  /*value_ptr*/  NULL);
