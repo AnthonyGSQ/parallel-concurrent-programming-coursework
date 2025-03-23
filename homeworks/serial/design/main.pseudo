@@ -10,5 +10,17 @@ main:
         Imprimir "Archivo no encontrado"
         return 1;
     }
-
     
+    CHAR bin_file;
+    DOUBLE time, conductivity, epsilon;
+    Si no se encuentra un char y 3 doubles en el Archivo
+        Imprimir "Invalid format"
+        cerrar file
+        return 1
+    FIN SI
+    cerrar file
+
+    imprimir datos del file
+    return 0;
+FIN MAIN
+
