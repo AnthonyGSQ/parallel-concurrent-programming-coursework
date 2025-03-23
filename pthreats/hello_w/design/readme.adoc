@@ -7,7 +7,6 @@
 :toc:
 :xrefstyle: short
 
-image:../trace/memory_trace_hello_recursive.svg[]
 
 [[problem_statement]]
 == Problem statement

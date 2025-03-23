@@ -1,0 +1,46 @@
+estructura lamina {
+    entero rows
+    entero columns
+    // Las variables conductivity y cell_height son usadas para calcular
+    // la transferencia de calor en la funcion update_cell
+    flotante conductivity
+    flotante cell_height
+    // Parametro utilizado para revisar si la lamina se encuentra
+    // estabilizada o nos
+    flotante epsilon
+    // Se utilizan flotantes debido a que las temperaturas contienen decimales
+    matriz_de_flotantes temperaturas;
+}
+
+//Declaracion de funciones
+
+// Se requieren dos enteros para el constructor de la clase lamina
+// En caso de recibir parametros invalidos (ej: 0, -2), imprime en pantalla
+// un mensaje indicando que se requieren de valores enteros mayores a 0
+FUNCION Lamina create_lamina(entero filas, entero columnas);
+
+// Esta funcion esta encargada de, al cambiar de estado k a estado k+1
+// empezar a moverse por la lamina segun la logica de transmicion de calor
+// realizando llamados de update_cell() de manera paralela (para trabajar
+// la actualizacion de varias celdas a la vez), segun una cola prioridad.
+// Conforme se actualiza la lamina, se conserva la diferencia de calor mas alta 
+// entre el estado k y k+1. Para al final comprobar si dicho valor es menor al
+// parametro epsilon, de ser el caso, hace un llamado a finish_simulation()
+FUNCION update_lamina();
+
+// Funcion encargada de actualizar el valor de la celda recibida c(row,column),
+// tomando en cuenta valores de las celdas adyacentes y la logica de transferencia
+// de calor. Esta celda puede aumentar o disminuir el calor, segun sea el caso.
+FUNCION update_cell(entero row, entero column);
+
+// Funcion encargada de avisarle al usuario que la lamina se ha estabilizado
+// para luego "romper" el ciclo de actualizaciones de lamina y celdas.
+// Finalmente hace un llamado a la funcion print_lamina()
+FUNCION finish_simulation()
+
+
+// Funcion para mostrarle al usuario el estado de la lamina al ser estabilizada
+FUNCION print_lamina();
+
+// Funcion encargada de liberar toda la memoria utilizada por la lamina
+FUNCION delete();
