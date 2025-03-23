@@ -47,6 +47,7 @@ include::tests/output001.txt[]
 
 [[design]]
 == Design of solution
+image:../design/Diagrama SImulacion de calor.svg[]
 
 #See the link:design/readme.adoc[design/] folder for an overall design of the solution.#
 

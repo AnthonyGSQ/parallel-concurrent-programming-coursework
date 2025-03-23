@@ -1,0 +1,14 @@
+main:
+    Si argv < 2 {
+        Imprimir "Entrada invalida"
+        retornar 1;
+        
+    }
+
+    abrir_rchivo file = argv[1];
+    Si !file {
+        Imprimir "Archivo no encontrado"
+        return 1;
+    }
+
+    

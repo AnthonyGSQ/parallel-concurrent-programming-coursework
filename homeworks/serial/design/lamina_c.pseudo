@@ -1,0 +1,34 @@
+#incluir "lamina.pseudo"
+
+// implementacion de las funciones 
+
+FUNCION Lamina * create_lamina(ENTERO rows, ENTERO columns){
+    Crear objeto lamina
+    Si lamina es nula entonces
+        retornar nulo
+    fin si
+
+    lamina.rows := rows
+    lamina.columns := columns
+
+    // Reservamos memoria para la lamina
+    lamina.temperatures = matriz_de_flotantes[rows][columns]
+}
+
+// funcion encargada de rellenar la lamina con los valores iniciales, vease
+// las temperaturas inyectadas en los bordes de la lamina
+FUNCION fill_matriz(Lamina * lamina, archivo input){
+    int borde = lamina.columns - 1;
+    Para i hasta lamina.rows hacer
+        lamina.temperautes[i][0] = input[i][0]
+        lamina.temperautes[i][borde] = input[i][borde]
+    FIN PARA
+    borde  = lamina.rows - 1;
+    Para j hasta lamina.columns hacer 
+        lamina.temperatures[0][j] = input[0][j]
+        lamina.temperatures[borde][j] = input[borde][j]
+}
+
+FUNCION update_lamina(){
+    
+}

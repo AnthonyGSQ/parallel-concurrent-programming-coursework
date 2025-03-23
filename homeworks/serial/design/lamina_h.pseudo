@@ -1,0 +1,40 @@
+ESTRUCTURA Lamina {
+    ENTERO filas
+    ENTERO columnas
+    // la k se refiere al estado de la lamina
+    ENTERO k
+    // Conductividad térmica de la lámina
+    FLOTANTE conductividad
+    FLOTANTE altura_celda
+    // Parametro utilizado para verificar la estabilidad termica de la lamina
+    FLOTANTE epsilon
+    // Matriz que almacena las temperaturas de cada celda
+    MATRIZ_DE_FLOTANTES temperaturas
+}
+
+// Crea y devuelve una lámina con las dimensiones especificadas.
+// Si los valores son inválidos (ej: 0, -2), imprime un error.
+FUNCIÓN Lamina* create_lamina(ENTERO filas, ENTERO columnas)
+
+// Funcion encargada de actualizar la lamina del estado k, al estado k+1
+// estara encargada de llamar a la funcion update_celda(fila, columna)
+// para ir actualizando las celdas.
+FUNCIÓN update_lamina()
+
+// Actualiza el valor de la celda en (fila, columna), tomando en cuenta
+// las temperaturas de sus celdas adyacentes y aplicando la lógica de 
+// transferencia de calor.
+FUNCIÓN update_cell(ENTERO fila, ENTERO columna)
+
+// funcion encargada de finalizar la simulacion una vez la lamina
+// se encuentre estabilizada, rompiendo el "bucle" de actualizaciones
+// de celdas.
+FUNCIÓN finish_simulation()
+
+// funcion encargada de imprimir la lamina (si esta existe), para
+// que el usuario pueda comprobar el estado actual de la lamina.
+FUNCIÓN print_lamina()
+
+// funcion encargada de liberar todos los recursos utilizados para
+// la simulacion
+FUNCIÓN delete_lamina(Lamina* l)
