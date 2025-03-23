@@ -1,43 +1,40 @@
 ESTRUCTURA Lamina {
     ENTERO filas
     ENTERO columnas
-    // Conductividad de la lámina
+    // la k se refiere al estado de la lamina
+    ENTERO k
+    // Conductividad térmica de la lámina
     FLOTANTE conductividad
-    // Altura de las celdas de la lamina
     FLOTANTE altura_celda
-    // Parametro para revisar si la lamina se estabilizo
+    // Parametro utilizado para verificar la estabilidad termica de la lamina
     FLOTANTE epsilon
     // Matriz que almacena las temperaturas de cada celda
     MATRIZ_DE_FLOTANTES temperaturas
 }
 
-// Declaración de funciones
-
 // Crea y devuelve una lámina con las dimensiones especificadas.
 // Si los valores son inválidos (ej: 0, -2), imprime un error.
-FUNCIÓN Lamina* lamina_crear(ENTERO filas, ENTERO columnas)
+FUNCIÓN Lamina* create_lamina(ENTERO filas, ENTERO columnas)
 
-// Inicia el proceso de actualización de la lámina llamando
-// de manera paralela la funcion lamina_actualizar_celda() para
-// actualizar varias celdas a la vez.
-// Usa una cola de prioridad (falta plantear que tipo de cola prioridad)
-// para actualizar primero las celdas con mayor cambio de temperatura.
-FUNCIÓN lamina_actualizar()
+// Funcion encargada de actualizar la lamina del estado k, al estado k+1
+// estara encargada de llamar a la funcion update_celda(fila, columna)
+// para ir actualizando las celdas.
+FUNCIÓN update_lamina()
 
 // Actualiza el valor de la celda en (fila, columna), tomando en cuenta
 // las temperaturas de sus celdas adyacentes y aplicando la lógica de 
 // transferencia de calor.
-FUNCIÓN lamina_actualizar_celda(ENTERO fila, ENTERO columna)
+FUNCIÓN update_cell(ENTERO fila, ENTERO columna)
 
-// Verifica si la lámina ha alcanzado estabilidad térmica.
-// Si se estabiliza, detiene el proceso de actualización y llama la funcion
-// lamina_imprimir()
-FUNCIÓN lamina_finalizar_simulacion()
+// funcion encargada de finalizar la simulacion una vez la lamina
+// se encuentre estabilizada, rompiendo el "bucle" de actualizaciones
+// de celdas.
+FUNCIÓN finish_simulation()
 
-// Imprime el estado actual de la lámina en la consola.
-FUNCIÓN lamina_imprimir()
+// funcion encargada de imprimir la lamina (si esta existe), para
+// que el usuario pueda comprobar el estado actual de la lamina.
+FUNCIÓN print_lamina()
 
-// Libera toda la memoria reservada por la estructura Lamina.
-// Revisa primeramente si existe la lamina o si tiene un size mayor
-// a 0 celdas. Si es el caso, no entra en bucle para eliminar cada celda.
-FUNCIÓN lamina_eliminar(Lamina* l)
+// funcion encargada de liberar todos los recursos utilizados para
+// la simulacion
+FUNCIÓN delete_lamina(Lamina* l)
