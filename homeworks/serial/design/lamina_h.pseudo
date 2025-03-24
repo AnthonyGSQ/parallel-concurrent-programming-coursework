@@ -12,6 +12,20 @@ ESTRUCTURA Lamina {
     MATRIZ_DE_FLOTANTES temperaturas
 }
 
+// Funcion constructora de la lamina, se encarga de preparar todo
+// para la creacion de la lamina, desde llamar a funciones que validen
+// los datos de entrada tales como la existencia del archivo binario
+// que cuente con los datos necesarios y una vez se ha verificado esto
+// crear la lamina acorde a las especificaciones dadas en el archivo binario.
+// la funcion recibe como parametros la ruta del binario y la cantidad de
+// hilos a utilizar.
+FUNCION lamina(const char *filename, int threads)
+
+// funcion dedicada a verificar que exista el archivo binario indicado en el .txt
+// que este tenga datos validos y en caso de tenerlos continuar con la creacion
+// de la lamina llamando a create_lamina()
+
+FUNCION read_binary_file(const char *filename)
 // Crea y devuelve una lámina con las dimensiones especificadas.
 // Si los valores son inválidos (ej: 0, -2), imprime un error.
 FUNCIÓN Lamina* create_lamina(ENTERO filas, ENTERO columnas)
