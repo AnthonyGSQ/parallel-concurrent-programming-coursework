@@ -1,12 +1,39 @@
 == Glosary
 
 === Programacion serial
+
+Es un paradigma de programacion donde la realizacion de tareas es serial, es decir, se realiza primeramente tarea1 y hasta que no sea
+finalizada, no se prosigue con tarea2
+
+
 === Programacion Concurrente
+
+Es un paradigma de programacion que puede basarse en la programacion iperativa o funcional. A diferencia de la programacion serial, la concurrente puede realizar varias tareas a la vez. Un ejemplo seria, mientras tarea01 termina, ir realizando tarea2
+
+
 === Programacion paralela
+
+Se refiere a la programacion que es capaz de realizar varias tareas al mismo tiempo. Es decir, realizar tarea1 y tarea2 a la vez, en el mismo instante
+
+
 === Concurrencia de tareas
+
+Se refiere a cuando varios hilos acceden a los mismos datos, esto puede generar problemas de condiciones de carreras.
+
+
 === Paralelismo de datos
+
+Se refiere a cuando un conjunto de datos es trabajado es dividido en fragmentos y cada fragmento es procesado en paralelo en distintas unidades de procesamiento
+
+
 === Hilo de ejecucion
+
+Un hilo de ejecucion se refiere a un ejecutante capaz de realizar tareas de forma paralela con otros ejecutantes (hilos).
 === Indeterminismo
+
+El indeterminismo es cuando no se sabe que hilo terminara su trabajo primero, poniendo un ejemplo seria enviar 2 hilos a realizar exactamente la misma tarea. A veces el hilo 1 terminara primero, a veces sera el segundo.
+
+
 === Memoria privada y compartida
 === Espera activa
 === Condicion de carrera
