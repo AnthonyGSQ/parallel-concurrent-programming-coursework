@@ -1,0 +1,29 @@
+= Hello_order_busywait
+:experimental:
+:nofooter:
+:source-highlighter: pygments
+:sectnums:
+:stem: latexmath
+:toc:
+:xrefstyle: short
+
+
+[[problem_statement]]
+== Problem statement
+Haga que los threads saluden siempre en orden. Es decir, si se crean w threads, la salida sea siempre en orden
+
+
+Utilice espera activa como mecanismo de sincronización (control de concurrencia).
+
+Ejecute varias veces su solución de hello_order_busywait con la cantidad máxima de threads que el su sistema operativo le permite. ¿Es consistente la duración de su solución con espera activa?
+
+Describa el comportamiento del programa y explique la razón de este comportamiento en el archivo readme.md dentro de su carpeta hello_order_busywait. Indique en qué condiciones sería apremiante utilizar espera activa, o en caso de no haberlas, sugiera soluciones alternativas.
+
+== Respuesta
+Al compilar varias veces si es consistente la duracion de la solucion con la espera activa.
+
+El comportamiento del programa es simple, al crear hilos cada hilo k debe esperar a que el hilo k-1 actualice el valor de next_thread para poder imprimir el saludo.
+
+No se me ocurre alguna situacion donde sea apremiante utilizar espera activa, considero mejor practica directamente no usar programacion paralela si se va a usar espera activa, a fin de cuentas el resultado obtenido es muy serial.
+
+Otra alternativa podria ser la comentada por el profesor, realizar la espera pero no en el CPU, para que no gaste recursos mientras se espera.
