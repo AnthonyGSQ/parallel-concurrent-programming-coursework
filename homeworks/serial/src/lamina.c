@@ -15,43 +15,41 @@ void lamina_constructor(const char* filename_, uint64_t threads_num) {
         return;
     }
 
-    
+    printf("Nose\n");
 }
 
 int read_binary_file(Lamina *lamina, FILE * file){
     if (!file) {
-        printf("Error: binary file not found");
+        printf("Error: binary file not found\n");
         return EXIT_FAILURE;
     }
-    unsigned char rows, columns;
-    fread(&rows, sizeof(unsigned char), 1, file);
-    fread(&columns, sizeof(unsigned char), 1, file);
-    printf("Rows: %d\n Columns: %d\n", rows, columns);
+    //inicializamos los valores para limpiar posible basura
+    lamina->rows = 0;
+    lamina->columns = 0;
+    if (fread(&lamina->rows, sizeof(uint64_t), 1, file) != 1) {
+        printf("Error: Failed to read rows from file\n");
+        fclose(file);
+        return EXIT_FAILURE;
+    }
+    if (fread(&lamina->columns, sizeof(uint64_t), 1, file) != 1) {
+        printf("Error: Failed to read columns from file\n");
+        fclose(file);
+        return EXIT_FAILURE;
+    }
+    printf("Rows: %ld \nColumns: %ld\n", lamina->rows, lamina->columns);
+    // Asignar memoria para la->temperatures
+    lamina->temperatures = (double **)malloc(lamina->rows * sizeof(double *));
+    for (uint64_t i = 0; i < lamina->rows; i++) {
+        lamina->temperatures[i] = (double *)malloc(lamina->columns * sizeof(double));
+    }
 
-    lamina->matrix = (float**)malloc(rows * sizeof(float *));
-    for(int i = 0; i< columns; i++){
-        lamina->matrix = (float**)malloc(columns * sizeof(float *));
-    }
-    // TODO: Posiblemente se deban interpretar los numeros de
-    // binario a decimal, de momento por facilidad se tomara los
-    // numeros tal cual, sin traduccion a decimal
-    for(int i = 0; i < rows; i++){
-        for(int j = 0; j< columns; j++){
-            fread(&lamina->matrix[i][j], sizeof(float), 1, file);
+    // Leer los valores de la->temperatures
+    for (uint64_t i = 0; i < lamina->rows; i++) {
+        for (uint64_t j = 0; j < lamina->columns; j++) {
+            fread(&lamina->temperatures[i][j], sizeof(double), 1, file);
         }
     }
-    // TODO: Esto sera eliminado pero de momento para las pruebas
-    // se queda.
-    fclose(file);
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < columns; j++) {
-            printf("%.2f ", lamina->matrix[i][j]);
-        }
-        printf("\n");
-    }
-    for(int i = 0; i < rows; i++){
-        free(lamina->matrix[i]);
-    }
+    print_lamina(lamina);
     return EXIT_SUCCESS;
 }
 
@@ -71,8 +69,14 @@ void finish_simulation(){
 
 }
 
-void print_lamina(){
-
+void print_lamina(Lamina* lamina){
+    printf("Matriz de temperaturas:\n");
+    for (uint64_t i = 0; i < lamina->rows; i++) {
+        for (uint64_t j = 0; j < lamina->columns; j++) {
+            printf("%8.2f ", lamina->temperatures[i][j]); // Imprime con 2 decimales y alineado
+        }
+        printf("\n"); // Salto de línea por fila
+    }
 }
 
 void delete_lamina(){

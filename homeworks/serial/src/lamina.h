@@ -6,14 +6,13 @@
 #include <stdint.h>
 
 typedef struct {
-    const uint64_t rows;
-    const uint64_t columns;
+    uint64_t rows;
+    uint64_t columns;
     uint64_t k;
     const float conductivity;
     const float cell_height;
     const float epsilon;
-    float ** temperatures;
-    float ** matrix;
+    double ** temperatures;
     FILE *binary_file;
 } Lamina;
 
@@ -24,7 +23,7 @@ void create_lamina(uint64_t rows, uint64_t columns);
 void update_lamina();
 void update_cell();
 void finish_simulation();
-void print_lamina();
+void print_lamina(Lamina * lamina);
 void delete_lamina();
 
 #endif
