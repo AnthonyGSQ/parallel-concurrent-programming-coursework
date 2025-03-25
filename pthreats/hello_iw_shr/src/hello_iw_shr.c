@@ -44,11 +44,15 @@ int main(int argc, char* argv[]) {
   if (shared_data) {
     shared_data->thread_count = thread_count;
     struct timespec start_time, finish_time;
+    // El primer parametro es el reloj del sistema operativo que
+    // queremos que clock_gettime utilice.
     clock_gettime(CLOCK_MONOTONIC, &start_time);
     // ahora al crear hilos reciben los datos compartidos y no el
     // numero de hilos a crear
     error = create_threads(shared_data);
     clock_gettime(CLOCK_MONOTONIC, &finish_time);
+    // restamos el tiempo inicial y el tiempo final para obtener
+    // el tiempo que tardo.
     double elapsed_time = finish_time.tv_sec - start_time.tv_sec +
       (finish_time.tv_nsec - start_time.tv_nsec) * 1e-9;
       printf("Execution time %.9lfs\n", elapsed_time);
