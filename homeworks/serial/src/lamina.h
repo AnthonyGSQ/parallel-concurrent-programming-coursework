@@ -9,20 +9,22 @@ typedef struct {
     uint64_t rows;
     uint64_t columns;
     uint64_t k;
-    const float conductivity;
-    const float cell_height;
-    const float epsilon;
+    uint64_t time;
+    double conductivity;
+    double height;
+    double epsilon;
     double ** temperatures;
-    FILE *binary_file;
+    double ** next_temperatures;
+    FILE *file;
 } Lamina;
 
-
-void lamina_constructor(const char* filename_, uint64_t threads_num);
-int read_binary_file(Lamina * lamina, FILE * binary_file_);
-void create_lamina(uint64_t rows, uint64_t columns);
-void update_lamina();
-void update_cell();
-void finish_simulation();
+int lamina_constructor(int argc, char *argv[]);
+int validate_entrance(int argc, char *argv[]);
+void reading_parameters(Lamina *lamina, char* filename);
+int create_lamina(Lamina *lamina);
+void update_lamina(Lamina * lamina);
+void update_cell(Lamina * lamina, uint64_t row, uint64_t column);
+void finish_simulation(Lamina * lamina);
 void print_lamina(Lamina * lamina);
 void delete_lamina();
 
