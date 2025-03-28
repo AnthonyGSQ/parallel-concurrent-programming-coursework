@@ -1,3 +1,16 @@
+= Paralela Anthony Sanchez Quiros
+
+== Pthreads
+
+[%autowidth]
+|===
+|# |Id |Type |Description
+|1 |link:pthreads/invert[invert] |Class_example |Serial program that invert integer numbers gived in the standar entrance
+|2 |link:pthreads/grandma_lottery[grandma_lottery] |Class_example |Serial program that invert integer numbers gived in the standar entrance
+|===
+
+== Tasks
+
 == Glosary
 
 === Programacion serial
