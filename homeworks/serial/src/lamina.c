@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <string.h>
 #include <math.h>
+#include <time.h>
 
 int lamina_constructor(int argc, char *argv[]) {
     // En caso de recibir menos parametros a los esperados, retorna EXIT_FAILURE
@@ -25,9 +27,15 @@ int lamina_constructor(int argc, char *argv[]) {
         printf("Error: could not allocate memory for Lamina\n");
         return EXIT_FAILURE;
     }
-    char *bin_file = (char *)malloc(256 * sizeof(char));
     char temp[256];
     char line[256];
+    strcpy(lamina->rutaBase, argv[1]);
+    char * lastSLash = strrchr(lamina->rutaBase, '/');
+    if (!lastSLash) {
+        fprintf(stderr, "Error: invalid route %s\n", argv[1]);
+        return EXIT_FAILURE;
+    }
+    *(lastSLash + 1) = '\0';
     // TODO(AnthonyGSQ): Este while es feisimo, lo se, la idea es cambiarlo a
     // futuro
     while (fgets(line, sizeof(line), file)) {
@@ -40,12 +48,11 @@ int lamina_constructor(int argc, char *argv[]) {
                   "parameters");
             return EXIT_FAILURE;
         }
-        // TODO(AnthonyGSQ): Quiza se deba cambiar la logica de la ruta
-        snprintf(bin_file, sizeof(bin_file), "../jobs/%s", temp);
-        if (reading_parameters(lamina, bin_file) == EXIT_FAILURE) {
+        snprintf(lamina->bin_file_name, 260, "%s%s", lamina->rutaBase, temp);
+        if (reading_parameters(lamina, lamina->bin_file_name) == EXIT_FAILURE) {
             return EXIT_FAILURE;
         }
-        lamina->file = fopen(bin_file, "rb");
+        lamina->file = fopen(lamina->bin_file_name, "rb");
         if (!lamina->file) {
             printf("Error: Could not open the binary file");
             return EXIT_FAILURE;
@@ -56,7 +63,6 @@ int lamina_constructor(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
     }
-    free(bin_file);
     return EXIT_SUCCESS;
 }
 
@@ -117,64 +123,44 @@ int create_lamina(Lamina *lamina) {
     printf("Rows: %ld \nColumns: %ld\n", lamina->rows, lamina->columns);
     // Reservamos memoria para las filas de las dos matrices de la lamina
     lamina->temperatures = (double **)malloc(lamina->rows * sizeof(double *));
-    if (lamina->temperatures == NULL) {
-        fprintf(stderr, "Error: No se pudo reservar memoria para"
-            "temperatures.\n");
-        return EXIT_FAILURE;
-    }
-    lamina->next_temperatures = (double **)malloc(lamina->rows *
-        sizeof(double *));
-    if (lamina->next_temperatures == NULL) {
-        fprintf(stderr, "Error: No se pudo reservar memoria para"
-            "next_temperatures.\n");
+    lamina->next_temperatures = (double **)malloc(lamina->rows * sizeof(double*));
+    if (!lamina->temperatures || !lamina->next_temperatures) {
+        fprintf(stderr, "Error: No se pudo reservar memoria para las filas"
+            " de las matrices.\n");
         free(lamina->temperatures);
+        free(lamina->next_temperatures);
         return EXIT_FAILURE;
     }
-    // Bucle para reservar memoria para las columnas de todas las filas de las
-    // dos matrices de la lamina, en caso de no poder se libera la memoria
-    // reservada en las columnas antes del fallo
+
+    // Reservar memoria para cada fila
     for (uint64_t i = 0; i < lamina->rows; i++) {
-        lamina->temperatures[i] = (double *)malloc(lamina->columns *
-            sizeof(double));
-        if (lamina->temperatures[i] == NULL) {
-            fprintf(stderr, "Error: No se pudo reservar memoria para"
-                " la fila %llu de temperatures.\n", i);
-            // Liberar memoria previamente reservada
-            for (uint64_t j = 0; j < i; j++) {
-                free(lamina->temperatures[j]);
-                free(lamina->next_temperatures[j]);
-            }
+        lamina->temperatures[i] = (double *)malloc(lamina->columns * sizeof(double));
+        lamina->next_temperatures[i] = (double *)malloc(lamina->columns * sizeof(double));
+
+        // Comprobar si la reserva de memoria falló para alguna fila
+        if (!lamina->temperatures[i] || !lamina->next_temperatures[i]) {
+            fprintf(stderr, "Error: No se pudo reservar memoria para la fila %" PRIu64 " de temperatures.\n", i);
             free(lamina->temperatures);
             free(lamina->next_temperatures);
-            exit(1);
+            return EXIT_FAILURE;
         }
-        lamina->next_temperatures[i] = (double *)malloc(lamina->columns *
-            sizeof(double));
-        if (lamina->next_temperatures[i] == NULL) {
-            fprintf(stderr, "Error: No se pudo reservar memoria para la"
-                "fila %llu de next_temperatures.\n", i);
-            // Liberar memoria previamente reservada
-            for (uint64_t j = 0; j < i; j++) {
-                free(lamina->temperatures[j]);
-                free(lamina->next_temperatures[j]);
-            }
-            free(lamina->temperatures);
-            free(lamina->next_temperatures);
-            exit(1);
+    }
+    // Bucle para leer los valores de la matriz
+    for (uint64_t i = 0; i < lamina->rows; i++) {
+        for (uint64_t j = 0; j < lamina->columns; j++) {
+            fread(&lamina->temperatures[i][j], sizeof(double), 1, lamina->file);
         }
     }
     // TODO(AnthonyGSQ): Impresion temporal, es solo para ver que todo sirva
     // hasta aca
     print_lamina(lamina);
     update_lamina(lamina);
-
     return EXIT_SUCCESS;
 }
 
 // TODO(AnthonyGSQ): Falta agregar logica de conductivity
 void update_lamina(Lamina * lamina) {
     double diff;
-    double scale = 1e15;
     uint64_t unstable_cells = 1;
     double** temp;
     while (unstable_cells > 0) {
@@ -205,8 +191,6 @@ void update_lamina(Lamina * lamina) {
                 // mas
                 if (diff > lamina->epsilon) {
                     unstable_cells++;
-                } else {
-                    printf("Diferencia: %.17lf\n", diff);
                 }
             }
         }
@@ -221,6 +205,7 @@ void update_lamina(Lamina * lamina) {
     print_lamina(lamina);
     printf("Lamina estabilizada\n");
     printf("///////////////////////////////////////////\n");
+    finish_simulation(lamina);
 }
 
 void update_cell(Lamina * lamina, uint64_t row, uint64_t column) {
@@ -233,14 +218,40 @@ void update_cell(Lamina * lamina, uint64_t row, uint64_t column) {
     (up + down + right + left - (4 * lamina->temperatures[row][column]));
 }
 
-void finish_simulation(Lamina * lamina) {
+int finish_simulation(Lamina * lamina) {
+    char report_file_name[256];
+    strncpy(report_file_name, lamina->bin_file_name, sizeof(report_file_name) - 1);
+    report_file_name[sizeof(report_file_name) - 1] = '\0';
+
+    printf("Ruta original copiada: %s\n", report_file_name);
+    char *dot = strrchr(report_file_name, '.');
+    if (dot == NULL) {
+        printf("Error: No se encontró un punto en la ruta del archivo.\n");
+        return EXIT_FAILURE;
+    }
+    printf("Punto encontrado en: %s\n", dot);
+    snprintf(dot, 5, ".tsv");
+    printf("Nuevo nombre de archivo: %s\n", report_file_name);
+    FILE *report_file = fopen(report_file_name, "a");
+    if (!report_file) {
+        printf("Error: No se pudo abrir el archivo %s\n", report_file_name);
+        return EXIT_FAILURE;
+    }
+    uint64_t total_k = lamina->k / lamina->time;
+    char text[256];
+    snprintf(text, sizeof(text), "%" PRIu64, total_k);
+    char *final_text = format_time(lamina->time, text, sizeof(text));
+    printf("A VER: %s y la ruta es %s\n", final_text, report_file_name);
+    fprintf(report_file, "%s", final_text);
+    fclose(report_file);
+    return EXIT_SUCCESS;
 }
 
 void print_lamina(Lamina* lamina) {
     printf("Matriz de temperaturas:\n");
     for (uint64_t i = 0; i < lamina->rows; i++) {
         for (uint64_t j = 0; j < lamina->columns; j++) {
-            printf("%.17lf ", lamina->temperatures[i][j]);
+            printf("[%.17lf] ", lamina->temperatures[i][j]);
         }
         printf("\n");
     }
@@ -248,3 +259,10 @@ void print_lamina(Lamina* lamina) {
 
 void delete_lamina() {
 }
+
+char* format_time(const time_t seconds, char* text, const size_t capacity) {
+    struct tm* gmt = gmtime(&seconds);
+    snprintf(text, capacity, "%04d/%02d/%02d\t%02d:%02d:%02d", gmt->tm_year - 70,
+        gmt->tm_mon, gmt->tm_mday - 1, gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
+    return text;
+  }

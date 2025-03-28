@@ -4,12 +4,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <time.h>
 
 typedef struct {
     uint64_t rows;
     uint64_t columns;
     uint64_t k;
     uint64_t time;
+    char rutaBase [260];
+    char bin_file_name[260];
     double conductivity;
     double height;
     double epsilon;
@@ -44,8 +47,8 @@ void update_lamina(Lamina * lamina);
 // utilizando la formula de difusion de calor y guardandola en la
 // misma posicion pero en lamina->next_temperatures.
 void update_cell(Lamina * lamina, uint64_t row, uint64_t column);
-void finish_simulation(Lamina * lamina);
+int finish_simulation(Lamina * lamina);
 void print_lamina(Lamina * lamina);
 void delete_lamina();
-
+char* format_time(const time_t seconds, char* text, const size_t capacity);
 #endif  // HOMEWORKS_SERIAL_SRC_LAMINA_H_
