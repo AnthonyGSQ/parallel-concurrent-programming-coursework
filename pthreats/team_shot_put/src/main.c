@@ -53,6 +53,7 @@ int main(int argc, char* argv[]) {
 
 void compete(const size_t athlete_count, double** best_shots) {
   pthread_t** thread_ids = calloc(team_count, sizeof(pthread_t*));
+  assert(thread_ids);
   private_data_t** private_data = calloc(team_count, sizeof(private_data_t*));
   assert(private_data);
   // For each team
@@ -64,13 +65,23 @@ void compete(const size_t athlete_count, double** best_shots) {
     // For each athlete
     for (size_t athlete_number = 0; athlete_number < athlete_count;
         ++athlete_number) {
-          private_data[team_number][athlete_count].team_number = team_number;
-      private_data[team_number][athlete_count].athlete_number = athlete_number;
-      private_data[team_number][athlete_count].best_shots = best_shots;
-      pthread_create(&thread_ids[team_number][athlete_number], NULL, athlete,
+        private_data[team_number][athlete_count].team_number = team_number;
+        private_data[team_number][athlete_count].athlete_number = athlete_number;
+        private_data[team_number][athlete_count].best_shots = best_shots;
+        pthread_create(&thread_ids[team_number][athlete_number], NULL, athlete,
         &private_data[team_number][athlete_number]);
     }
   }
+  for (size_t team_number = 0; team_number < team_count; ++team_number) {
+    for (size_t athlete_number = 0; athlete_number < athlete_count;
+      ++athlete_number) {
+        pthread_join(thread_ids[team_number][athlete_number], NULL);
+      }
+      free(private_data[team_number]);
+      free(thread_ids[team_number]);
+  }
+  free(private_data);
+  free(thread_ids);
 }
 
 void* athlete(void * data) {
