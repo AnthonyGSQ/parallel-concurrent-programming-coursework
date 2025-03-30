@@ -5,8 +5,30 @@
 [%autowidth]
 |===
 |# |Id |Type |Description
-|1 |link:pthreads/invert[invert] |Class_example |Serial program that invert integer numbers gived in the standar entrance
-|2 |link:pthreads/grandma_lottery[grandma_lottery] |Class_example |Serial program that invert integer numbers gived in the standar entrance
+|1 |link:pthreads/commented_examples[commented_examples] |Homework | Basic
+example of pthread_create.
+|2 |link:pthreads/recursive_hello[recursive_hello] |Homework | Recursive
+creating of threads.
+|3 |link:pthreads/invert[invert] |Class_example |Serial program that invert
+integer numbers gived in the standar entrance
+|4 |link:pthreads/recursive_hello/trace[recursive_hello_trace] |Homework |
+Memory trace of recursive_hello
+|5 |link:pthreads/hello_w[hello_w] |Homework | Creating and joining threads
+with cycle for
+|6 |link:pthreads/grandma_lottery[grandma_lottery] |Class_example |Serial
+program that invert integer numbers gived in the standar entrance
+|7 |link:pthreads/hello_iwi_pri[hello_iwi_pri] |Homework | Basic example of
+thread private data
+|8 |link:pthreads/hello_iwi_shr[hello_iwi_shr] |Homework | Basic example of
+thread public data
+|9 |link:pthreads/hello_order_busywait[hello_order_busywait] |Homework | Basic
+example of thread busy waiting
+|10 |link:pthreads/team_shot_put[team_shot_put] |Homework | The program takes as
+input n teams, each consisting of m athletes. Each athlete performs multiple
+throws, and their best attempt is recorded. The program uses threads to handle
+the execution efficiently. After all throws are processed, the team with the
+highest combined best throws is declared the winner.
+|11 |link:pthreads/create_thread_team[create_thread_team] |Class_example |
 |===
 
 == Tasks
