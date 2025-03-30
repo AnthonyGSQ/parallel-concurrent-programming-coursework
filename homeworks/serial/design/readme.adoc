@@ -58,17 +58,35 @@ image:../design/Diagrama SImulacion de calor.svg[]
 [[build]]
 === Build
 
-#Describe how to compile your solution.#
 
-[[usage]]
-=== Usage
+2. Instalar dependencias:
+- Asegúrate de tener instalados todos los paquetes necesarios:
+  ```
+  make instdeps
+  ```
 
-#Describe how to run your solution, e.g: arguments. Provide examples.#
+== Guía de Uso
+1. Compilar el Proyecto:
+- Navega a la carpeta `serial` y compila con `make`:
+  ```
+  cd serial
+  make
+  ```
 
+
+=== Ejecutando el Proyecto
+Una vez compilado el proyecto, puedes ejecutarlo usando el siguiente comando:
+[source, bash]
+---
+./bin/serial ./jobs/job###/job###.txt
+---
+
+Donde ### es el numero del job a utilizar en el programa, ejemplo:
+[source, bash]
+---
+ ./jobs/job001b/job002.txt
+---
 
 [[credits]]
 == Credits
-
-#Provide your contact information.#
-
-#Give credit to authors of libraries, images, sounds, or any resource you used.#
+Creditos a Jeisson Hidalgo-Céspedes, pues fue quien brindo el make y la guia de como realizar este proyecto.
