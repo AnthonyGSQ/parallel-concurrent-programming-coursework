@@ -12,43 +12,57 @@ ESTRUCTURA Lamina {
     MATRIZ_DE_FLOTANTES temperaturas
 }
 
-// Funcion constructora de la lamina, se encarga de preparar todo
-// para la creacion de la lamina, desde llamar a funciones que validen
-// los datos de entrada tales como la existencia del archivo binario
-// que cuente con los datos necesarios y una vez se ha verificado esto
-// crear la lamina acorde a las especificaciones dadas en el archivo binario.
-// la funcion recibe como parametros la ruta del binario y la cantidad de
-// hilos a utilizar.
-FUNCION lamina(const char *filename, int threads)
+// Funcion encargada del recibimiento de los parametros, abrir los archivos
+// crear el objeto lamina y llamar a las funciones validate_entrance(),
+// reading_parameters() y finalmente a create_lamina().
+// En caso de recibir parametros invalidos, no encontrar el archivo indicado
+// por el usuario, no poder abrir el archivo encontrado o no poder crear
+// la lamina, retorna EXIT_FAILURE
+FUNCION lamina_constructor(ENTERO argc, STRING argv[])
 
-// funcion dedicada a verificar que exista el archivo binario indicado en el .txt
-// que este tenga datos validos y en caso de tenerlos continuar con la creacion
-// de la lamina llamando a create_lamina()
+// Funcion encargada de verificar que los parametros recibidos del txt
+// sean validos, ej: Que height no sea 0
+int reading_parameters(Lamina *lamina, STRING filename, STRING line);
 
-FUNCION read_binary_file(const char *filename)
-// Crea y devuelve una lámina con las dimensiones especificadas.
-// Si los valores son inválidos (ej: 0, -2), imprime un error.
-FUNCIÓN Lamina* create_lamina(ENTERO filas, ENTERO columnas)
+// Funcion encargada de reservar memoria para las matrices de la interfaz
+// temperatures y next_temperatures. Lee el archivo binario, tomando los
+// primeros 8 bytes como el total de filas, los segundos 8 bytes como numero
+// de columnas y el resto como los valores de la lamina.
+// En caso de no encontrar el archivo binario, no poder reservar memoria
+// para las matrices o recibir un numero invalido de filas o columnas
+// retorna EXIT_FAILURE
+int create_lamina(Lamina *lamina);
 
-// Funcion encargada de actualizar la lamina del estado k, al estado k+1
-// estara encargada de llamar a la funcion update_celda(fila, columna)
-// para ir actualizando las celdas.
-FUNCIÓN update_lamina()
+// Funcion encargada de crear el archivo de reporte tsv de cada respectiva
+// plate, una vez creado el archivo, agrega los parametros finales de la
+// lamina, vease el tiempo que le tomo estabilizarse y los parametros iniciales
+int report_file(Lamina *lamina);
 
-// Actualiza el valor de la celda en (fila, columna), tomando en cuenta
-// las temperaturas de sus celdas adyacentes y aplicando la lógica de 
-// transferencia de calor.
-FUNCIÓN update_cell(ENTERO fila, ENTERO columna)
+// Funcion encargada de actualizar la lamina del estado k al estado k+1
+// va aumentando la temperatura, realizando llamados a update_cell() solo
+// si no se esta trabajando con un borde, si la celda actual es un borde
+// la ignora.
+int update_lamina(Lamina * lamina);
 
-// funcion encargada de finalizar la simulacion una vez la lamina
-// se encuentre estabilizada, rompiendo el "bucle" de actualizaciones
-// de celdas.
-FUNCIÓN finish_simulation()
+// Funcion encargada de actualizar la celda de la posicion recibida,
+// utilizando la formula de difusion de calor y guardandola en la
+// misma posicion pero en lamina->next_temperatures.
+void update_cell(Lamina * lamina, uint64_t row, uint64_t column);
 
-// funcion encargada de imprimir la lamina (si esta existe), para
-// que el usuario pueda comprobar el estado actual de la lamina.
-FUNCIÓN print_lamina()
+// Funcion encargada de finalizar la simulacion y guardar los datos de la lamina
+// final en el .bin y sus datos en el .tsv correctos.
+int finish_simulation(Lamina * lamina);
 
-// funcion encargada de liberar todos los recursos utilizados para
-// la simulacion
-FUNCIÓN delete_lamina(Lamina* l)
+// Funcion encargada de imprimir la lamina
+void print_lamina(Lamina * lamina);
+
+// Funcion encargada de mostrar un mensaje de error y llamar a la funcion
+// delete_lamina() para liberar toda la memoria
+void error_manager(Lamina *lamina, STRING error_message);
+
+// Funcion encargada de liberar toda la memoria aun no liberada de la lamina
+void delete_lamina(Lamina *lamina);
+
+// Funcion encargada de transformar el tiempo transcurrido en formato de
+// horas/dias/meses
+void format_time(DOUBLE seconds, STRING text, DOUBLE capacity);

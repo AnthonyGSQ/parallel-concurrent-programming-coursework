@@ -1,34 +1,273 @@
-#incluir "lamina.pseudo"
+incluir lamina.h
+// implementacion de las funciones
+función lamina_constructor(argc, argv):
+    return_value = 0
 
-// implementacion de las funciones 
+    // Verificar si los parámetros son suficientes
+    si argc < 2:
+        mostrar_error("Invalid entrance: you need to specify a .txt and the amount of threads you want to use")
+        retornar EXIT_FAILURE
 
-FUNCION Lamina * create_lamina(ENTERO rows, ENTERO columns){
-    Crear objeto lamina
-    Si lamina es nula entonces
-        retornar nulo
-    fin si
+    // Intentar abrir el archivo .txt
+    archivo = abrir_archivo(argv[1], "r")
+    si archivo es NULL:
+        mostrar_error("Error: could not open file")
+        retornar EXIT_FAILURE
 
-    lamina.rows := rows
-    lamina.columns := columns
+    // Leer línea por línea del archivo
+    mientras haya líneas en archivo:
+        lamina = reservar_memoria_para_Lamina()
 
-    // Reservamos memoria para la lamina
-    lamina.temperatures = matriz_de_flotantes[rows][columns]
+        // Verificar si la memoria se ha asignado correctamente
+        si lamina es NULL:
+            mostrar_error("Error: could not allocate memory for Lamina")
+            retornar EXIT_FAILURE
+
+        // Establecer la ruta base
+        establecer_ruta_base(lamina, argv[1])
+
+        // Verificar que la ruta sea válida
+        si ruta_invalida(lamina->base_route):
+            mostrar_error("Error: invalid route")
+            liberar_memoria(lamina)
+            retornar EXIT_FAILURE
+
+        // Leer y procesar la línea del archivo
+        si línea_vacia(line):
+            mostrar_error("Error: could not read a line from the .txt file")
+            retornar EXIT_FAILURE
+
+        // Leer los parámetros de la línea
+        return_value = leer_parametros(lamina, lamina->binary_file_name, line)
+        si return_value es EXIT_FAILURE:
+            retornar EXIT_FAILURE
+
+        // Intentar abrir el archivo binario de la lamina
+        lamina->file = abrir_archivo(lamina->binary_file_name, "rb")
+        mostrar("Creating lamina...")
+
+        // Crear la lamina
+        return_value = crear_lamina(lamina)
+        si return_value es EXIT_FAILURE:
+            retornar EXIT_FAILURE
+
+        // Liberar la memoria de la lamina
+        liberar_memoria(lamina)
+
+    // Retornar éxito
+    retornar EXIT_SUCCESS
+FIN FUNCION
+
+función reading_parameters(lamina, bin_file, line):
+    // Inicializar buffer temporal
+    temp = ""
+
+    // Verificar que la línea contenga los 5 parámetros esperados
+    si sscanf(line, "%s %" PRIu64 "%lf %lf %lf", temp, lamina->time, lamina->conductivity, lamina->height, lamina->epsilon) != 5:
+        mostrar_error("Error: The file of configuration does not have the expected parameters")
+        retornar EXIT_FAILURE
+    FIN SI
+    // Construir la ruta al archivo binario
+    concatenar(lamina->binary_file_name, lamina->base_route, temp)
+    imprimir("Binary file: %s", bin_file)
+    imprimir("Time: %" PRIu64, lamina->time)
+
+    // Verificar que los valores sean válidos
+    si lamina->time == 0:
+        mostrar_error("Invalid time")
+        retornar EXIT_FAILURE
+    FIN SI
+    imprimir("Conductivity: %.f", lamina->conductivity)
+    si lamina->conductivity <= 0:
+        mostrar_error("Invalid conductivity")
+        retornar EXIT_FAILURE
+    FIN SI
+    imprimir("Height: %.f", lamina->height)
+    si lamina->height <= 0:
+        mostrar_error("Invalid height")
+        retornar EXIT_FAILURE
+    FIN SI
+    imprimir("Epsilon: %.15f", lamina->epsilon)
+    si lamina->epsilon <= 0:
+        mostrar_error("Invalid epsilon")
+        retornar EXIT_FAILURE
+    FIN SI
+    retornar EXIT_SUCCESS
+FIN FUNCION
+
+función create_lamina(lamina):
+    // Inicializar filas y columnas a 0 para evitar valores basura
+    lamina->rows = 0
+    lamina->columns = 0
+
+    // Leer el número de filas desde el archivo
+    si leer desde archivo lamina->file:
+        lamina->rows = valor leído
+    sino:
+        mostrar_error("Error: Failed to read rows from file")
+        retornar EXIT_FAILURE
+
+    // Validar filas
+    si lamina->rows <= 0:
+        mostrar_error("Error: Invalid number of rows")
+        retornar EXIT_FAILURE
+
+    // Leer el número de columnas desde el archivo
+    si leer desde archivo lamina->file:
+        lamina->columns = valor leído
+    sino:
+        mostrar_error("Error: Failed to read columns from file")
+        retornar EXIT_FAILURE
+
+    // Validar columnas
+    si lamina->columns <= 0:
+        mostrar_error("Error: Invalid number of columns")
+        retornar EXIT_FAILURE
+
+    // Reservar memoria para las matrices
+    lamina->temperatures = reservar_memoria(lamina->rows * tamaño(double *))
+    lamina->next_temperatures = reservar_memoria(lamina->rows * tamaño(double *))
+
+    si no se pudo reservar memoria para las matrices:
+        mostrar_error("Error: No se pudo reservar memoria para las filas de las matrices.")
+        retornar EXIT_FAILURE
+
+    // Reservar memoria para cada fila de las matrices
+    para cada fila en lamina->temperatures y lamina->next_temperatures:
+        reservar_memoria para lamina->temperatures[fila] y lamina->next_temperatures[fila]
+        si no se pudo reservar memoria para alguna fila:
+            mostrar_error("Error: No se pudo reservar memoria para las filas de las matrices.")
+            retornar EXIT_FAILURE
+
+retornar EXIT_SUCCESS
+
+función update_lamina(lamina):
+    inicializar diff a 0
+    inicializar unstable_cells a 1
+    inicializar temp como NULL
+
+    mientras unstable_cells > 0:
+        // Resetea unstable_cells después de cada ciclo completo
+        unstable_cells = 0
+
+        // Resetea la matriz next_temperatures
+        para cada fila i de 0 a lamina->rows:
+            para cada columna j de 0 a lamina->columns:
+                si la celda está en el borde:
+                    continuar
+                lamina->next_temperatures[i][j] = 0
+
+        // Actualiza cada celda de la matriz
+        para cada fila i de 0 a lamina->rows:
+            para cada columna j de 0 a lamina->columns:
+                si la celda está en el borde:
+                    continuar
+                actualizar_celda(lamina, i, j)
+                diff = diferencia entre lamina->next_temperatures[i][j] y lamina->temperatures[i][j]
+                si diff > lamina->epsilon:
+                    unstable_cells++
+
+        // Intercambia las matrices
+        lamina->temperatures pasa a ser lamina->next_temperatures
+        lamina->next_temperatures pasa a ser lamina->temperatures
+
+        lamina->k += lamina->time
+    FIN MIENTRAS
+
+    imprimir "Lamina estabilizada"
+
+    return_value = finish_simulation(lamina)
+    si return_value == EXIT_FAILURE:
+        retornar EXIT_FAILURE
+
+retornar EXIT_SUCCESS
+
+funcion void update_cell(OBJETO lamina, ENTERO row, ENTERO column) {
+    // aseguramos que no se procesara una celda invalida
+    Si la celda recibida no se sale de los bordes hacer 
+        // formula para actualizar la temperatura de la celda
+        lamina->next_temperatures[row][column] =
+        lamina->temperatures[row][column] +
+        ((lamina->k * lamina->conductivity) /
+        (lamina->height * lamina->height)) *
+        (up + down + right + left - (4 * lamina->temperatures[row][column]));
+    FIN SI
 }
 
-// funcion encargada de rellenar la lamina con los valores iniciales, vease
-// las temperaturas inyectadas en los bordes de la lamina
-FUNCION fill_matriz(Lamina * lamina, archivo input){
-    int borde = lamina.columns - 1;
-    Para i hasta lamina.rows hacer
-        lamina.temperautes[i][0] = input[i][0]
-        lamina.temperautes[i][borde] = input[i][borde]
-    FIN PARA
-    borde  = lamina.rows - 1;
-    Para j hasta lamina.columns hacer 
-        lamina.temperatures[0][j] = input[0][j]
-        lamina.temperatures[borde][j] = input[borde][j]
+funcion int finish_simulation(OBJETO lamina) {
+    llamar a report_file
+    SI report_file fallo hacer {
+        retornar EXIT_FAILURE;
+    }
+    retornar EXIT_SUCCESS;
 }
 
-FUNCION update_lamina(){
-    
+función report_file(lamina):
+    imprimir "tiempooo: %" PRIu64, lamina->k
+
+    inicializar text, temp, file_name, alternative_route como cadenas vacías
+
+    // Copiar el nombre del archivo binario
+    snprintf(file_name, tamaño de file_name, "%s", lamina->binary_file_name)
+
+    // Buscar la última '/' y el punto para obtener el nombre del archivo sin extensión
+    encontrar la última '/' en file_name
+    encontrar el punto en file_name
+    poner '\0' en el punto para eliminar la extensión
+
+    // Construir las rutas alternativas
+    snprintf(alternative_route, tamaño de alternative_route, "%s%s%s", lamina->base_route, lastSLash, ".tsv")
+    snprintf(temp, tamaño de temp, "%s%s%s%s", lamina->base_route, "tsv/", lastSLash, ".tsv")
+
+    imprimir "FILENAME: %s", lastSLash
+    imprimir "HOLA: %s", temp
+    imprimir "ALTERNATIVE: %s", alternative_route
+
+    // Intentar abrir el archivo en la carpeta "tsv"
+    lamina->report_file = fopen(temp, "w+")
+    si no se puede abrir el archivo:
+        imprimir "Error: could not open tsv file"
+        imprimir "Creating new tsv file"
+        // Intentar abrir en una ruta alternativa si el anterior falla
+        lamina->report_file = fopen(alternative_route, "w+")
+
+    // Preparar el texto a escribir en el archivo
+    snprintf(text, tamaño de text, "%s\t%" PRIu64 "\t%g\t%g\t%g\t", temp, lamina->time, lamina->conductivity, lamina->height, lamina->epsilon)
+
+    // Formatear el tiempo
+    format_time(lamina->k, text, tamaño de text)
+
+    imprimir "FINAL TEXT: %s", text
+
+    // Escribir en el archivo
+    fprintf(lamina->report_file, "%s", text)
+
+retornar EXIT_SUCCESS
+
+funcion void print_lamina(OBJETO lamina) {
+    imprimir la lamina;
+}
+
+funcion void error_manager(Lamina *lamina, const char* error_message) {
+    imprimir(error_message)
+    Si lamina existe {
+        delete_lamina(lamina);
+    }
+}
+
+funcion void delete_lamina(OBJETO lamina) {
+    SI existe lamina {
+        SI existe lamina->temperaturas {
+            liberar lamina->temperaturas
+        }
+        SI existe lamina->next_temperaturas {
+            liberar lamina->next_temperaturas
+        }
+        SI existe lamina->file {
+            liberar lamina->file
+        }
+        SI existe lamina->report_file {
+            liberar lamina->report_file
+        }
+    }
 }
