@@ -1,0 +1,43 @@
+struct private {
+    int thread_number
+    int punches_gived
+}
+
+struct public {
+    int total_threads
+    int punches_needed
+}
+
+
+main(int argc, char argv[]) {
+    SI argv[] != 3 hacer {
+        print "Error: Not the right amounth of parameters, make sure to only
+        write the number of threads and how much punches the pinata need to
+        be broken "
+        retornar EXIT_FAILURE
+    }
+    ENTERO total_threads = argv[1]
+    pthread threads[total_threads];
+    Para i hasta total_threads hacer {
+        create_thread(threads[i], NULL, punch, NULL);
+    }
+    Para i hasta total_threads hacer {
+        thread_join(threads[i]);
+    }
+}
+
+funcion punch(){
+    Si punches_needed = 0 hacer {
+        // nada, no se puede golpear mas la pinata pues ya esta rota
+        return
+    }
+
+    // bloqueamos el dar el golpe pues solo un hilo puede hacer esto a la vez
+    mutex_lock
+    current_thread->punches_gived++
+    punches_needed--;
+    // desbloqueamos pues el golpe ya ha sido dado, de esta manera otro hilo
+    // podra realizar el golpe
+    mutex_unlock
+
+}
