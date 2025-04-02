@@ -37,14 +37,12 @@ int main(int argc, char* argv[]) {
   }
   uint64_t thread_count = sysconf(_SC_NPROCESSORS_ONLN);
   uint64_t punches_needed;
-  if (argc == 2) {
+  if (argc == 3) {
     if (sscanf(argv[1], "%" SCNu64, &thread_count) == 1) {
     } else {
       printf("Error: invalid thread count\n");
       return EXIT_FAILURE;
     }
-  }
-  if (argc == 3) {
     if (sscanf(argv[2], "%" SCNu64, &punches_needed) == 1) {
     } else {
       printf("Error: invalid amounth of punches needed\n");
@@ -71,6 +69,7 @@ int create_threads(uint64_t thread_count, uint64_t punches_needed_) {
   // los hilos
   shared_data_t* shared_data = (shared_data_t*)calloc(1, sizeof(shared_data_t));
   shared_data->punches_needed = punches_needed_;
+  shared_data->total_threads = thread_count;
   // creamos el mutex
   error = pthread_mutex_init(&shared_data->can_punch, NULL);
   // si no se pudo crear el mutex, retornarmos EXIT_FAILURE
@@ -103,32 +102,45 @@ void* punch(void *data) {
   // funcion
   private_data_t* private_data = (private_data_t*) data;
   shared_data_t* shared_data = private_data->shared_data;
-  // en caso de punches_needed ser 0, significa que la pinata ya se
-  // rompio y por ende no puede realizar el golpe.
-  if (shared_data->punches_needed == 0) {
+
+  // mi while no puede tener como condicion el punches_needed
+  // debido a que genera una condicion de carrera al ser un acceso
+  // a un dato que esta siendo alterado de manera concurrente
+  while (1) {
+  // bloqueamos para que solo un hilo pueda golpear a la vez
+  pthread_mutex_lock(&shared_data->can_punch);
+  // si un hilo anterior al actual ya rompio la pinata, no permitimos
+  // que el hilo actual continue pues ya no puede golpear la pinata
+  if (shared_data->punches_needed <= 0) {
+    pthread_mutex_unlock(&shared_data->can_punch);
     return NULL;
   }
-  while (shared_data->punches_needed > 0) {
-    // bloqueamos la parte de bloquear para que solo un hilo pueda golpear
-  // a la vez.
-  pthread_mutex_lock(&shared_data->can_punch);
-  if (shared_data->punches_needed == 0) {
-    printf(", I broke the pinata!");
-    pthread_mutex_unlock(&shared_data->can_punch);
-  } else {
-    printf("\n");
-  }
-  private_data->punches_gived++;
-  // imprimimos el numero de hilo actual y cuantos golpes lleva
+  // "damos un golpe"
+  shared_data->punches_needed--;
+  // imprimimos quien dio el golpe y cuantos golpes ha dado
   printf("Thread %" PRIu64 "/%" PRIu64 ": %" PRIu64 " hits ",
     private_data->thread_number,
     shared_data->total_threads, private_data->punches_gived);
-  shared_data->punches_needed--;
-  // si el hilo actual consigue romper la pinata, imprimimos dicha situacion
-  //pthread_cond_broadcast(&shared_data->cond_punch);
-  // desbloqueamos pues el hilo que estaba golpeando la pinata, ya termino
-  // de golpear.
+  // si el hilo actual despues de golpear detecta que punches_needed
+  // vale 0, es porque este mismo hilo fue quien rompio la pinata
+  if (shared_data->punches_needed == 0) {
+    printf(", I broke the pinata!\n");
+    pthread_mutex_unlock(&shared_data->can_punch);
+    return NULL;
+  // caso contrario no imprime que rompio la pinata
+  } else {
+    printf("\n");
+  }
+  // aumentamos en 1 la cantidad de golpes dados
+  private_data->punches_gived++;
+  // desbloqueamos el mutex, pues ya hemos dado el golpe
   pthread_mutex_unlock(&shared_data->can_punch);
+  // esto de sched_yield he de admitir lo saque de chatgpt debido a que sin
+  // esto pasabaque un solo hilo hacia muchos ciclos del while seguidos sin
+  // darle oportunidad a otros hilos de realizar el trabajo.
+  // Preguntandole a chatgpt me comento que se debe a hambre de hilos, osea
+  // monopoliza los recursos y sigue ejecutando.
+  sched_yield();
   }
   return NULL;
 }
