@@ -1,0 +1,55 @@
+= Project name
+:experimental:
+:nofooter:
+:source-highlighter: pygments
+:sectnums:
+:stem: latexmath
+:toc:
+:xrefstyle: short
+
+
+[[problem_statement]]
+== Problem statement
+
+#Analysis: Describe the problem to be solved#
+
+Input example:
+
+[source]
+----
+include::tests/input001.txt[]
+----
+
+Output example:
+
+[source]
+----
+include::tests/output001.txt[]
+----
+
+[[design]]
+== Design of solution
+
+#See the link:design/readme.adoc[design/] folder for an overall design of the solution.#
+
+
+[[user_manual]]
+== User manual
+
+[[build]]
+=== Build
+
+#Describe how to compile your solution.#
+
+[[usage]]
+=== Usage
+
+#Describe how to run your solution, e.g: arguments. Provide examples.#
+
+
+[[credits]]
+== Credits
+
+#Provide your contact information.#
+
+#Give credit to authors of libraries, images, sounds, or any resource you used.#
