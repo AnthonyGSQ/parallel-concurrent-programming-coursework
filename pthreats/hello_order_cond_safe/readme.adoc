@@ -1,4 +1,4 @@
-= Project name
+= hello_order_cond_safe
 :experimental:
 :nofooter:
 :source-highlighter: pygments
@@ -11,45 +11,16 @@
 [[problem_statement]]
 == Problem statement
 
-#Analysis: Describe the problem to be solved#
 
-Input example:
+Al igual que Ejemplo 7, haga que los threads saluden siempre en orden. Es decir, si se crean w threads, la salida sea siempre en orden
+[source, bash]
+---
+Hello from thread 0 of w
+Hello from thread 1 of w
+Hello from thread 2 of w
+...
+Hello from thread w of w
+---
 
-[source]
-----
-include::tests/input001.txt[]
-----
+Evite (si es posible) el control de concurrencia, es decir, trate de usar seguridad condicional (conditionally safe).
 
-Output example:
-
-[source]
-----
-include::tests/output001.txt[]
-----
-
-[[design]]
-== Design of solution
-
-#See the link:design/readme.adoc[design/] folder for an overall design of the solution.#
-
-
-[[user_manual]]
-== User manual
-
-[[build]]
-=== Build
-
-#Describe how to compile your solution.#
-
-[[usage]]
-=== Usage
-
-#Describe how to run your solution, e.g: arguments. Provide examples.#
-
-
-[[credits]]
-== Credits
-
-#Provide your contact information.#
-
-#Give credit to authors of libraries, images, sounds, or any resource you used.#

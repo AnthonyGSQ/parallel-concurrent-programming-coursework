@@ -10,16 +10,18 @@
 #include <time.h>
 #include <unistd.h>
 
+// size para el arreglo de saludos
+#define MAX_GREET_LEN 256
+
+// thread_shared_data_t
 typedef struct shared_data {
-  sem_t* can_greet;
+  char** greets;
   uint64_t thread_count;
 } shared_data_t;
 
-// estructura de los datos privados de cada hilo
+// thread_private_data_t
 typedef struct private_data {
-  // se utilizan los uint64_t para que el size de las variables
-  // no dependa de la arquitectura de la computadora
-  uint64_t thread_number;
+  uint64_t thread_number;  // rank
   shared_data_t* shared_data;
 } private_data_t;
 
@@ -27,12 +29,10 @@ typedef struct private_data {
  * @brief ...
  */
 void* greet(void* data);
-int create_threads(shared_data_t* thread_count);
+int create_threads(shared_data_t* shared_data);
 
-// procedure main(argc, argv[])
 int main(int argc, char* argv[]) {
   int error = EXIT_SUCCESS;
-  // asumimos el numero de hilos = al numero de nucleos de la computadora
   uint64_t thread_count = sysconf(_SC_NPROCESSORS_ONLN);
   if (argc == 2) {
     if (sscanf(argv[1], "%" SCNu64, &thread_count) == 1) {
@@ -41,35 +41,29 @@ int main(int argc, char* argv[]) {
       return 11;
     }
   }
-  // reservamos memoria para el shared_data y inicializamos en 0 con calloc
+  // utilizamos calloc para evitar posibles valores basura
   shared_data_t* shared_data = (shared_data_t*)calloc(1, sizeof(shared_data_t));
   if (shared_data) {
-	// creamos el arreglo de semaforos para la funcion greet
-    shared_data->can_greet = (sem_t*) calloc(thread_count, sizeof(sem_t));
+    shared_data->greets = (char**) calloc(thread_count, sizeof(char*));
     shared_data->thread_count = thread_count;
-	// creamos un semaforo para cada hilo y lo inicializamos con valor 0 excepto
-	// el primer hilo creado, ya que la negacion de 0 es 1 y la negacion de
-	// cualquier numero mayor a 0 dara 0.
-    for (uint64_t thread_number = 0; thread_number < shared_data->thread_count
-        ; ++thread_number) {
-      // can_greet[thread_number] := create_semaphore(not thread_number)
-      error = sem_init(&shared_data->can_greet[thread_number], /*pshared*/ 0
-        , /*value*/ !thread_number);
-    }
 
-    if (shared_data->can_greet) {
+    if (shared_data->greets) {
+      // logica para el calculo e impresion del tiempo que le toma al
+      // programa realizar todo
       struct timespec start_time, finish_time;
-	  // este bloque de codigo es para indicar cuanto tiempo le tomo
-	  // al programa ejecutar todo
       clock_gettime(CLOCK_MONOTONIC, &start_time);
+
       error = create_threads(shared_data);
+
       clock_gettime(CLOCK_MONOTONIC, &finish_time);
       double elapsed_time = finish_time.tv_sec - start_time.tv_sec +
         (finish_time.tv_nsec - start_time.tv_nsec) * 1e-9;
+
       printf("Execution time: %.9lfs\n", elapsed_time);
-      free(shared_data->can_greet);
+
+      free(shared_data->greets);
     } else {
-      fprintf(stderr, "Error: could not allocate semaphores\n");
+      fprintf(stderr, "Error: could not allocate greets\n");
       error = 13;
     }
     free(shared_data);
@@ -78,87 +72,79 @@ int main(int argc, char* argv[]) {
     error = 12;
   }
   return error;
-}
+}  // end procedure
+
 
 int create_threads(shared_data_t* shared_data) {
-	int error = EXIT_SUCCESS;
-	// reservamos memoria para nuestro struct compartido
-	pthread_t* threads = (pthread_t*)
-	  malloc(shared_data->thread_count * sizeof(pthread_t));
-	// reservamos memoria para nuestro struct privado
-	private_data_t* private_data = (private_data_t*)
-	  calloc(shared_data->thread_count, sizeof(private_data_t));
-	// si se pudo reservar memoria para el hilo y su estructura privada
-	// realizamos todo, sino retornamos error 23
-	if (threads && private_data) {
-		// bucle para la creacion de hilos y asignacion de datos 
-		// privados para cada hilo
-	  for (uint64_t thread_number = 0; thread_number < shared_data->thread_count
-		  ; ++thread_number) {
-		if (error == EXIT_SUCCESS) {
-		  private_data[thread_number].thread_number = thread_number;
-		  private_data[thread_number].shared_data = shared_data;
-		  // create_thread(greet, thread_number)
-		  error = pthread_create(&threads[thread_number], /*attr*/ NULL, greet
-			, /*arg*/ &private_data[thread_number]);
-		  if (error == EXIT_SUCCESS) {
-		  } else {
-			fprintf(stderr, "Error: could not create secondary thread\n");
-			error = 21;
-			break;
-		  }
-  
-		} else {
-		  fprintf(stderr, "Error: could not init semaphore\n");
-		  error = 22;
-		  break;
-		}
-	  }// for thread_number := 0 to thread_count do
-  
-	  // print "Hello from main thread"
-	  printf("Hello from main thread\n");
-	  // bucle para destruir todos los hilos y semaforos creados
-	  for (uint64_t thread_number = 0; thread_number < shared_data->thread_count
-		  ; ++thread_number) {
-		pthread_join(threads[thread_number], /*value_ptr*/ NULL);
-		sem_destroy(&shared_data->can_greet[thread_number]);
-	  }
-	  // terminamos de liberar la memoria
-	  free(private_data);
-	  free(threads);
-	} else {
-	  fprintf(stderr, "Error: could not allocate %" PRIu64 " threads\n"
-		, shared_data->thread_count);
-	  error = 23;
-	}
-  
-	return error;
+  int error = EXIT_SUCCESS;
+  // creamos n hilos reservando memoria con malloc
+  pthread_t* threads = (pthread_t*)
+    malloc(shared_data->thread_count * sizeof(pthread_t));
+    // al ser un struct utilizamos calloc para no trabajar con
+    // una variable struct no inicializada
+  private_data_t* private_data = (private_data_t*)
+    calloc(shared_data->thread_count, sizeof(private_data_t));
+  if (threads && private_data) {
+    for (uint64_t thread_number = 0; thread_number < shared_data->thread_count
+        ; ++thread_number) {
+          // reservamos memoria para los n saludos de 256 caracteres
+      shared_data->greets[thread_number] = (char*)
+        malloc(MAX_GREET_LEN * sizeof(char));
+      if (shared_data->greets[thread_number]) {
+        // inicializamso el primer caracter en 0
+        shared_data->greets[thread_number][0] = '\0';
+        // le indicamos a cada hilo sus datos privados.
+        private_data[thread_number].thread_number = thread_number;
+        private_data[thread_number].shared_data = shared_data;
+        error = pthread_create(&threads[thread_number], /*attr*/ NULL, greet
+          , /*arg*/ &private_data[thread_number]);
+        if (error == EXIT_SUCCESS) {
+        } else {
+          fprintf(stderr, "Error: could not create secondary thread\n");
+          error = 21;
+          break;
+        }
+      } else {
+        fprintf(stderr, "Error: could not init semaphore\n");
+        error = 22;
+        break;
+      }
+    }
+
+    printf("Hello from main thread\n");
+
+    for (uint64_t thread_number = 0; thread_number < shared_data->thread_count
+        ; ++thread_number) {
+      pthread_join(threads[thread_number], /*value_ptr*/ NULL);
+    }
+    // for para imprimir los saludos
+    for (uint64_t thread_number = 0; thread_number < shared_data->thread_count
+        ; ++thread_number) {
+      printf("%s\n", shared_data->greets[thread_number]);
+      // free despues del ultimo uso de greets
+      free(shared_data->greets[thread_number]);
+    }  // end for
+
+    free(private_data);
+    free(threads);
+  } else {
+    fprintf(stderr, "Error: could not allocate %" PRIu64 " threads\n"
+      , shared_data->thread_count);
+    error = 22;
   }
 
+  return error;
+}
+
+// procedure greet:
 void* greet(void* data) {
   assert(data);
   private_data_t* private_data = (private_data_t*) data;
   shared_data_t* shared_data = private_data->shared_data;
-
-  // esperamos en el semaforo hasta que sea mi turno
-  int error = sem_wait(&shared_data->can_greet[private_data->thread_number]);
-  if (error) {
-    fprintf(stderr, "error: could not wait for semaphore\n");
-  }
-
-  printf("Hello from secondary thread %" PRIu64 " of %" PRIu64 "\n"
+  // sprintf es para realizar la impresion al buffer greets
+  sprintf(shared_data->greets[private_data->thread_number]
+    , "Hello from secondary thread %" PRIu64 " of %" PRIu64
     , private_data->thread_number, shared_data->thread_count);
 
-  // indicamos cual sera el siguiente hilo a poder pasar por el
-  // semaforo
-  const uint64_t next_thread = (private_data->thread_number + 1)
-    % shared_data->thread_count;
-	// aumentamos el valor del semaforo para indicar que puede pasar
-	// un hilo mas
-  error = sem_post(&shared_data->can_greet[next_thread]);
-  if (error) {
-    fprintf(stderr, "error: could not increment semaphore\n");
-  }
-
   return NULL;
-}
+}  // end procedure
