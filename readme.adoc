@@ -29,6 +29,19 @@ throws, and their best attempt is recorded. The program uses threads to handle
 the execution efficiently. After all throws are processed, the team with the
 highest combined best throws is declared the winner.
 |11 |link:pthreads/create_thread_team[create_thread_team] |Class_example |
+Exercise to solve team_shot_put using pthreads teams instead of normal pthreads
+|12 |link:pthreads/race_position[race_position] |Homework | This program
+simulates a race condition among threads, where only one thread can reach
+position x, but the outcome is non-deterministic.
+|13 |link:pthreads/hello_order_semaphor[hello_order_semaphor] |Homework | 
+This program allow only one thread to print a greeting at the same time using
+a semaphore for the threads
+|14 |link:pthreads/birthday_pinata[birthday_pinata] |Class_example | This
+program simulates a birthday party scenario where all threads must hit the
+pinata until it breaks. The thread that breaks the piñata must announce it.
+|15 |link:pthreads/hello_order_cond_safe[hello_order_cond_safe] |Homework |
+A program that allows threads to print in order using conditional safe to avoid
+busy-waiting
 |===
 
 == Tasks
