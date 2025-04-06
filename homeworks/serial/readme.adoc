@@ -7,8 +7,9 @@
 :toc:
 :xrefstyle: short
 
-[[problem_description]]
-== Problem Description
+[[descripcion del problema]]
+
+== Descripcion del problema
 
 Se debe crear una simulación que ayude a encontrar el momento de equilibrio térmico de una lámina RxC (R número de columnas y C número de filas), la cual recibe calor constante por el borde.
 
@@ -30,14 +31,19 @@ La diferencia a comparar con epsilon de cada celda será la resta del valor en e
 
 #Si el valor más grande de toda la lámina es menor a epsilon, el programa finalizará.#
 
-[[user_manual]]
-== User Manual
+[[manual]]
+
+== Manual del usuario
 
 === Build
 
 1. Instalar dependencias:
 - Asegúrate de tener instalados todos los paquetes necesarios:
 
+[source, bash]
+---
+ make instdeps
+---
 
 === Guía de Uso
 
@@ -56,8 +62,8 @@ Donde ### es el número del job a utilizar en el programa. Ejemplo:
 ./jobs/job001b/job002.txt
 ----
 
-[[credits]]
-== Credits
+[[creditos]]
+== Creditos
 
 Creditos a Jeisson Hidalgo-Céspedes, pues fue quien brindo el make y la guia de como realizar este proyecto.
 

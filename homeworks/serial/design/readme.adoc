@@ -7,7 +7,7 @@
 :toc:
 :xrefstyle: short
 
-=== Input Example:
+=== Ejemplo de entrada:
 [source, bash]
 ----
 [10] [10] [10] [10]
@@ -17,7 +17,7 @@
 [2]  [0]  [0]  [2]
 ----
 
-=== Output Example:
+=== Ejemplo de salida:
 [source, bash]
 ----
 [0] [0] [0] [0]
@@ -28,7 +28,7 @@
 ----
 
 [[design]]
-== Design of Solution
+== Diseno de la solucion
 
 image:../design/Diagrama Simulacion de calor.svg[]
 
