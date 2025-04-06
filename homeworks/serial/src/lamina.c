@@ -119,8 +119,6 @@ int reading_parameters(Lamina *lamina, char* bin_file, char* line) {
   snprintf(lamina->binary_file_name,
       sizeof(lamina->binary_file_name) + sizeof(temp), "%s%s",
       lamina->base_route, temp);
-    printf("Binary file: %s\n", bin_file);
-    printf("Time: %"PRIu64 "\n", lamina->time);
     // Ifs que verifican que los valores recibidos del txt sean validos, si no
     // lo son, retornan EXIT_FAILURE
     if (lamina->time == 0) {
@@ -295,6 +293,7 @@ int update_lamina(Lamina * lamina) {
         lamina->k += lamina->time;
     }
     printf("Lamina estabilizada: \n");
+    print_lamina(lamina);
     return_value = finish_simulation(lamina);
     if (return_value == EXIT_FAILURE) {
         return EXIT_FAILURE;
@@ -366,7 +365,6 @@ int finish_simulation(Lamina * lamina) {
  * ruta alternativa.
  */
 int report_file(Lamina *lamina) {
-    printf("tiempooo: %" PRIu64 "\n", lamina->k);
     char text[260] = "";
     char temp[260] = "";
     char file_name[260] = "";
@@ -379,9 +377,6 @@ int report_file(Lamina *lamina) {
     lamina->base_route, lastSLash, ".tsv");
     snprintf(temp, sizeof(temp), "%s%s%s%s", lamina->base_route,
     "tsv/", lastSLash, ".tsv");
-    printf("FILENAME: %s\n", lastSLash);
-    printf("HOLA: %s\n", temp);
-    printf("ALTERNATIVE: %s\n", alternative_route);
     // si no se encuentra la carpeta tsv, crea el archivo tsv en la misma
     // carpeta donde se encuentra el binario leido
     lamina->report_file = fopen(temp, "w+");
@@ -393,7 +388,6 @@ int report_file(Lamina *lamina) {
     snprintf(text, sizeof(temp), "%s\t%" PRIu64 "\t%g\t%g\t%g\t", temp,
     lamina->time, lamina->conductivity, lamina->height, lamina->epsilon);
     format_time(lamina->k, text, sizeof(text));
-    printf("FINAL TEXT: %s", text);
     fprintf(lamina->report_file, "%s", text);
     return EXIT_SUCCESS;
 }
