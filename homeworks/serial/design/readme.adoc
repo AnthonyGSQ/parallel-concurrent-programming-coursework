@@ -7,86 +7,89 @@
 :toc:
 :xrefstyle: short
 
-
 [[problem_description]]
-== Problem description
-Se debe crear una simulacion que ayude a encontrar el momento de equilibrio termico de una lamina RxC (R numero de columnas y C numero de filas) la cual se le inyecta calor constante por el borde.
+== Problem Description
+
+Se debe crear una simulación que ayude a encontrar el momento de equilibrio térmico de una lámina RxC (R número de columnas y C número de filas), la cual recibe calor constante por el borde.
+
+Estas láminas serán matrices donde cada celda almacena una temperatura, la cual cambia según el estado k y la temperatura de las celdas cercanas (arriba, abajo, izquierda, derecha). La temperatura actual será la suma de las 4 celdas adyacentes.
+
+Además, cada celda puede perder temperatura, distribuyéndola en las 4 celdas adyacentes. La transferencia depende del área que recorre (tamaño de la celda). A medida que pasa el tiempo, más calor se transfiere a las celdas adyacentes. La cantidad de energía intercambiada dependerá de la calidad conductora de la lámina.
+
+El programa finaliza cuando se alcanza el punto de equilibrio térmico. Este se calcula a partir de un parámetro epsilon, que representará el mínimo cambio de temperatura significativo. Si una sola de las celdas tiene un cambio de temperatura mayor a epsilon, la simulación debe continuar.
+
+La diferencia a comparar con epsilon de cada celda será la resta del valor en el estado k y el valor en el estado k+1, donde:
+
+* Estado k: estado de la lámina transcurridos 0 minutos.
+* Estado k+1: estado de la lámina transcurridos 20 minutos.
+
+#Si el valor más grande de toda la lámina es menor a epsilon, el programa finalizará.#
 
 
-Dichas laminas seran matrices donde cada celda almacena una temperatura, la cual cambia segun el estado k y la temperatura de las laminas cercanas (arriba, abajo, izq, der). La temperatura actual sera la suma de las 4 adyacentes.
-
-
-Dicha celda tambien puede perder temperatura, distribuyendola en las 4 celdas adyacentes. La transferencia depende del area que recorre (tamano de la celda). A mas tiempo pasa, mas calor se transfiere a las celdas adyacentes. La cantidad de energia intercambiada dependera de la calidad conductora de la lamina.
-
-
-EL programa finaliza en el momento que se haya alcanzado el punto de equilibrio. Esto se calcula a partir de un parametro epsilon, que representara el minimo cambio de temperatura significativo. Si una sola de las celdas tiene un cambio de temperatura mayor a epsilon, la simulacion debe continuar.
-
-
-La diferencia a comparar con epsilon de cada celda sera la resta del valor en el estado k y el valor en el estado k+1. Donde estado se refiere al estado en el que se encuentra la lamina transcurrido t tiempo Ejemplo:
-
-    * Estado k: estado de la lamina transcurridos 0 minutos.
-    * Estado k+1: estado de la lamina transcurridos 20 minutos.
-
-
-#Si el valor mas grande de toda la lamina es menor a epsilon, el programa finalizara.#
-
-
-Input example:
-
-[source]
+=== Input Example:
+[source, bash]
 ----
-include::tests/input001.txt[]
+[10] [10] [10] [10]
+[8]  [0]  [0]  [8]
+[6]  [0]  [3]  [6]
+[4]  [0]  [0]  [4]
+[2]  [0]  [0]  [2]
 ----
 
-Output example:
-
-[source]
+=== Output Example:
+[source, bash]
 ----
-include::tests/output001.txt[]
+[0] [0] [0] [0]
+[0] [0] [0] [0]
+[0] [0] [3] [0]
+[0] [0] [0] [0]
+[0] [0] [0] [0]
 ----
 
 [[design]]
-== Design of solution
-image:../design/Diagrama SImulacion de calor.svg[]
+== Design of Solution
 
-#See the link:design/readme.adoc[design/] folder for an overall design of the solution.#
+image:../design/Diagrama Simulacion de calor.svg[]
 
+=== Pseudocodigos
+
+link:../design/main.pseudo[main_c.pseudo]
+
+link:../design/lamina.h.pseudo[lamina_h.pseudo]
+
+link:../design/lamina.c.pseudo[lamina_c.pseudo]
 
 [[user_manual]]
-== User manual
+== User Manual
 
-[[build]]
 === Build
 
-
-2. Instalar dependencias:
+1. Instalar dependencias:
 - Asegúrate de tener instalados todos los paquetes necesarios:
-  ```
-  make instdeps
-  ```
 
-== Guía de Uso
+
+=== Guía de Uso
+
 1. Compilar el Proyecto:
-- Navega a la carpeta `serial` y compila con `make`:
-  ```
-  cd serial
-  make
-  ```
+- Navega a la carpeta `serial` y compila con `make`
+
 
 
 === Ejecutando el Proyecto
+
 Una vez compilado el proyecto, puedes ejecutarlo usando el siguiente comando:
 [source, bash]
----
+----
 ./bin/serial ./jobs/job###/job###.txt
----
+----
 
-Donde ### es el numero del job a utilizar en el programa, ejemplo:
+Donde ### es el número del job a utilizar en el programa. Ejemplo:
 [source, bash]
----
- ./jobs/job001b/job002.txt
----
+----
+./jobs/job001b/job002.txt
+----
 
 [[credits]]
 == Credits
+
 Creditos a Jeisson Hidalgo-Céspedes, pues fue quien brindo el make y la guia de como realizar este proyecto.
