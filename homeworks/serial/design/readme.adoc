@@ -1,4 +1,4 @@
-= Transferencia de calor
+= Transferencia de calor.
 :experimental:
 :nofooter:
 :source-highlighter: pygments
