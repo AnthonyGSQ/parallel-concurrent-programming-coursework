@@ -27,7 +27,10 @@ simulation_t* simulation_create() {
     simulation->consumer_min_delay = 0;
     simulation->consumer_max_delay = 0;
     queue_init(&simulation->queue);
+    pthread_mutex_init(&simulation->can_access_next_unit, /* attr */ NULL);
     simulation->next_unit = 0;
+    sem_init(&simulation->can_consume, /* pshared */ 0, /* value */ 0);
+    pthread_mutex_init(&simulation->can_access_consumed_count, /* attr */ NULL);
     simulation->consumed_count = 0;
   }
   return simulation;
@@ -35,6 +38,9 @@ simulation_t* simulation_create() {
 
 void simulation_destroy(simulation_t* simulation) {
   assert(simulation);
+  pthread_mutex_destroy(&simulation->can_access_consumed_count);
+  sem_destroy(&simulation->can_consume);
+  pthread_mutex_destroy(&simulation->can_access_next_unit);
   queue_destroy(&simulation->queue);
   free(simulation);
 }
@@ -44,7 +50,7 @@ int simulation_run(simulation_t* simulation, int argc, char* argv[]) {
   if (error == EXIT_SUCCESS) {
     unsigned int seed = 0;
     getrandom(&seed, sizeof(seed), GRND_NONBLOCK);
-    srandom(seed);
+    srand(seed);
 
     struct timespec start_time;
     clock_gettime(/*clk_id*/CLOCK_MONOTONIC, &start_time);

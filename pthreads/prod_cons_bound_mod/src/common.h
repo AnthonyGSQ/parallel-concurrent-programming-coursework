@@ -2,10 +2,11 @@
 
 #ifndef COMMON_H
 #define COMMON_H
-
+#define _POSIX_C_SOURCE 200809L
 #include <semaphore.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/types.h>
 
 #include "queue.h"
 
@@ -33,7 +34,10 @@ typedef struct simulation {
   useconds_t consumer_max_delay;
 
   queue_t queue;
+  pthread_mutex_t can_access_next_unit;
   size_t next_unit;
+  sem_t can_consume;
+  pthread_mutex_t can_access_consumed_count;
   size_t consumed_count;
 } simulation_t;
 

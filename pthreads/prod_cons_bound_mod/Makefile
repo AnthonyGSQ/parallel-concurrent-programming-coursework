@@ -148,5 +148,3 @@ help:
 	@echo "  test      Run executable against test cases in folder tests/"
 	@echo "  tsan      Build for detecting thread errors, e.g race conditions"
 	@echo "  ubsan     Build for detecting undefined behavior"
-
-Last updated 2025-04-05 16:10:27 -0600

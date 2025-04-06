@@ -5,4 +5,4 @@
 
 void* consume(void* data);
 
-#endif  // CONSUMER_H
+#endif  // PRODUCER_H
