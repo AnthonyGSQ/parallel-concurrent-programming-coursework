@@ -12,6 +12,7 @@
 class ConsumerTest;
 class DispatcherTest;
 class ProducerTest;
+class AssemblerTest;
 
 /**
  * @brief Controller class that simulates the message passing between
@@ -31,7 +32,8 @@ class ProducerConsumerTest {
   int dispatcherDelay = 0;
   /// Delay of consumer to consume a package, negative for max random
   int consumerDelay = 0;
-
+  /// Probability of loss of packages
+  double packetLossProbability = 0.0;
  private:
   /// Producer of the simulated network messages
   ProducerTest* producer = nullptr;
@@ -39,6 +41,8 @@ class ProducerConsumerTest {
   DispatcherTest* dispatcher = nullptr;
   /// Consumers of the simulated network messages
   std::vector<ConsumerTest*> consumers;
+  /// Asembler that can lose network packages
+  AssemblerTest* assembler = nullptr;
 
  public:
   /// Constructor
@@ -52,7 +56,7 @@ class ProducerConsumerTest {
   /// Analyze the command line arguments
   int analyzeArguments(int argc, char* argv[]);
   /// Create network threads: producers, consumers, assemblers and dispatchers
-  void createThreads();
+  void createThreadsObjects();
   /// Intercommunicate threads using queues
   void connectQueues();
   /// Start the execution of threads
