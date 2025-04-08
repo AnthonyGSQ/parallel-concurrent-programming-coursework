@@ -11,14 +11,16 @@
 #include "consumer.h"
 #include "producer.h"
 #include "simulation.h"
-
+// funciones privadas, pues se encuentran en el .c
 int analyze_arguments(simulation_t* simulation, int argc, char* argv[]);
 int create_consumers_producers(simulation_t* simulation);
 int join_threads(size_t count, pthread_t* threads);
-
+// funcion encargada de reservar memoria para todo lo necesario como los mutex
+// semaforos, struct y sus variables.
 simulation_t* simulation_create() {
   simulation_t* simulation = (simulation_t*) calloc(1, sizeof(simulation_t));
   if (simulation) {
+    // inicializamos todos los parametros
     simulation->unit_count = 0;
     simulation->producer_count = 0;
     simulation->consumer_count = 0;
@@ -26,16 +28,19 @@ simulation_t* simulation_create() {
     simulation->producer_max_delay = 0;
     simulation->consumer_min_delay = 0;
     simulation->consumer_max_delay = 0;
+    // creamos la cola
     queue_init(&simulation->queue);
+    // creamos el mutex para el acceso a las unidades
     pthread_mutex_init(&simulation->can_access_next_unit, /* attr */ NULL);
     simulation->next_unit = 0;
+    // semaforo para saber si existen productos para consumir
     sem_init(&simulation->can_consume, /* pshared */ 0, /* value */ 0);
     pthread_mutex_init(&simulation->can_access_consumed_count, /* attr */ NULL);
     simulation->consumed_count = 0;
   }
   return simulation;
 }
-
+// funcion encargada de liberar toda la memoria reservada
 void simulation_destroy(simulation_t* simulation) {
   assert(simulation);
   pthread_mutex_destroy(&simulation->can_access_consumed_count);
@@ -44,7 +49,8 @@ void simulation_destroy(simulation_t* simulation) {
   queue_destroy(&simulation->queue);
   free(simulation);
 }
-
+// funcion encargada de correr la simulacion y medir el tiempo que le toma
+// realizar todo el trabajo
 int simulation_run(simulation_t* simulation, int argc, char* argv[]) {
   int error = analyze_arguments(simulation, argc, argv);
   if (error == EXIT_SUCCESS) {
@@ -66,7 +72,9 @@ int simulation_run(simulation_t* simulation, int argc, char* argv[]) {
   }
   return error;
 }
-
+// funcion encargada de validar los parametros recibidos, en caso
+// de fallar con uno de los parametros o mas, o si no encuentra la cantidad
+// necesaria de parametros, returna un error
 int analyze_arguments(simulation_t* simulation, int argc, char* argv[]) {
   int error = EXIT_SUCCESS;
   if (argc == 8) {
@@ -103,7 +111,7 @@ int analyze_arguments(simulation_t* simulation, int argc, char* argv[]) {
   }
   return error;
 }
-
+// funcion encargada de crear los hilos productores y consumidores
 pthread_t* create_threads(size_t count, void*(*subroutine)(void*), void* data) {
   pthread_t* threads = (pthread_t*) calloc(count, sizeof(pthread_t));
   if (threads) {
@@ -119,7 +127,7 @@ pthread_t* create_threads(size_t count, void*(*subroutine)(void*), void* data) {
   }
   return threads;
 }
-
+// funcion encargada de unir todos los hilos productores y consumidores creados
 int join_threads(size_t count, pthread_t* threads) {
   int error = EXIT_SUCCESS;
   for (size_t index = 0; index < count; ++index) {
@@ -129,13 +137,16 @@ int join_threads(size_t count, pthread_t* threads) {
   free(threads);
   return error;
 }
-
+// funcion encargada de enviar hilos a realizar los trabajos de las funciones
+// producers() y consumers(), en caso de no poder realizar dicha accion
+// retorna un errir
 int create_consumers_producers(simulation_t* simulation) {
   assert(simulation);
   int error = EXIT_SUCCESS;
-
+  // creamos el productor para que realice su trabajo
   pthread_t* producers = create_threads(simulation->producer_count, produce
     , simulation);
+  // creamos el consumidor para que realice su trabajo
   pthread_t* consumers = create_threads(simulation->consumer_count, consume
     , simulation);
 

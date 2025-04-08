@@ -43,18 +43,23 @@ procedure produce1:
         break while
       end if
     unlock(can_access_next_unit)
-  
+    // tiempo que se tarda en producir el producto
     delay(random_between(producer_min_delay, producer_max_delay))
     lock(can_access_queue)
+    // encolamos el producto recien producido
       enqueue(queue, my_unit)
     unlock(can_access_queue)
     print("Produced ", my_unit)
+    // avisamos de que hay un nuevo producto para consumir
     signal(can_consume)
   end while
 end procedure
 
 procedure consume1:
+// el while no tiene condicion pues generaria una condicion de carrera
   while true do
+    // evitamos condiciones de carrera bloqueando la comparativa y 
+    // asignacion de variables entre hilos.
     lock(can_access_consumed_count)
       if consumed_count < unit_count then
         consumed_count := consumed_count + 1
@@ -63,8 +68,10 @@ procedure consume1:
         break while
       end if
     unlock(can_access_consumed_count)
-
+      // esperamos a que exista un producto para poder consumirlo
     wait(can_consume)
+    // bloqueamos el acceso al queue para evitar que 2 o mas consumidores
+    // tomen el mismo producto y lo consuman
     lock(can_access_queue)
       declare my_unit := dequeue(queue)
     unlock(can_access_queue)
@@ -76,5 +83,3 @@ end procedure
 function random_between(min, max):
   return min + rand() % (max - min)
 end function
-
-Last updated 2025-04-05 16:26:04 -0600
