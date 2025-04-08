@@ -42,6 +42,18 @@ pinata until it breaks. The thread that breaks the piñata must announce it.
 |15 |link:pthreads/hello_order_cond_safe[hello_order_cond_safe] |Homework |
 A program that allows threads to print in order using conditional safe to avoid
 busy-waiting
+|16 |link:pthreads/building_tasks[building_tasks] |Class_Example | This exercise
+involves fixing a concurrent program that simulates task execution based on a
+dependency graph, ensuring that no worker thread starts before all its
+prerequisite tasks are completed.
+|17 |link:pthreads/prod_cons_bound[prod_cons_bound] | Homework |This exercise
+focuses on the bounded buffer problem, where a fixed-size buffer is shared
+between producer and consumer threads that must be synchronized to avoid
+overflows and underflows.
+|17 |link:pthreads/prod_cons_bound_mod[prod_cons_bound_mod] | Homework | This
+exercise addresses the unbounded buffer problem, where producer and consumer
+threads interact with a buffer that can grow dynamically, requiring
+synchronization but without the constraint of a fixed size.
 |===
 
 == Tasks
