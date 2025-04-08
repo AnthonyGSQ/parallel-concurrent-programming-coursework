@@ -10,21 +10,20 @@ void* consume(void* data) {
   simulation_t* simulation = (simulation_t*)data;
 
   while (true) {
-    // lock(can_access_consumed_count)
+    // bloqueamos con mutex el manejo de la variable consumed_count
     pthread_mutex_lock(&simulation->can_access_consumed_count);
     if (simulation->consumed_count < simulation->unit_count) {
-      // Reserve the next product to me
+      // se reserva el siguiente producto a consumir para el hilo
+      // que haya tomado el mutex_lock
       ++simulation->consumed_count;
     } else {
-      // unlock(can_access_consumed_count)
       pthread_mutex_unlock(&simulation->can_access_consumed_count);
-      // break while
       break;
     }
     // unlock(can_access_consumed_count)
     pthread_mutex_unlock(&simulation->can_access_consumed_count);
 
-    // wait(can_consume)
+    // esperamos a tener productos que consumir
     sem_wait(&simulation->can_consume);
 
     size_t value = 0;

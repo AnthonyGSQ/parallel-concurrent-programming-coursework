@@ -9,9 +9,12 @@ procedure main(argc, argv[]):
     shared consumer_max_delay := integer(argv[7])
 
     shared queue := create_integer_queue()
+    // mutex para asegurar que solo un consumidor pueda acceder a la cola
     shared can_access_queue := create_mutex()
 
     shared next_unit := 0
+    // mutex para asegurar que el producto siguiente a consumir
+    // sea tomado una sola vez por un solo consumidor
     shared can_access_next_unit := create_mutex()
 
     shared can_consume := create_semaphore(0)
@@ -32,6 +35,7 @@ end procedure
 procedure produce1:
   while true do
     declare my_unit := 0
+    // bloqueamos el acceso a next_unit para evitar condiciones de carrera
     lock(can_access_next_unit)
       if next_unit < unit_count then
         next_unit := next_unit + 1
@@ -40,8 +44,10 @@ procedure produce1:
         unlock(can_access_next_unit)
         break while
       end if
+      // liberamos el mutex para que cualquier otro hilo continue su respectivo
+      // trabajo
     unlock(can_access_next_unit)
-  
+      // tiempo que se tarda en producir un producto
     delay(random_between(producer_min_delay, producer_max_delay))
     lock(can_access_queue)
       enqueue(queue, my_unit)
@@ -53,7 +59,10 @@ end procedure
 
 procedure consume2:
   while true do
+    // esperamos a que se existan productos para consumir
     wait(can_consume)
+    // bloqueamos el acceso a la cola para evitar que dos o mas hilos
+    // tomen un elemento de la cola, evitando accesos a colas vacias
     lock(can_access_queue)
       if is_empty(queue) then
         break while

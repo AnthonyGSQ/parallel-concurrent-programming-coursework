@@ -4,7 +4,7 @@
 #define SIMULATION_H
 
 typedef struct simulation simulation_t;  // opaque record
-
+// funciones publicas, pues se encuentran en el .h
 simulation_t* simulation_create();
 int simulation_run(simulation_t* simulation, int argc, char* argv[]);
 void simulation_destroy(simulation_t* simulation);
