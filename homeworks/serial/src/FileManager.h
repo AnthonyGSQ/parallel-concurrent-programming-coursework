@@ -5,8 +5,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+/***
+ * @struct shared_file_data
+ * @brief Estructura encargada del manejo de archivos, tanto las rutas
+ * dadas por el usuario, como el manejo del archivo binario y el archivo
+ * binario sobre el cual trabaja la simulacion de calor
+ */
 typedef struct {
+    /***
+     * @brief variable utilizada para guardar la ruta base y poder reutilizarla
+     * para la construccion de rutas para encontrar el archivo binario y 
+     * el archivo tsv
+     */
     char base_route[256];
+    /***
+     * @brief variable donde queda guardada la ruta para leer los binarios
+     * indicados en el archivo txt recibido
+     */
     char binary_file_name[256];
     /**
      * @brief Archivo de binario que contiene los datos de la matriz
