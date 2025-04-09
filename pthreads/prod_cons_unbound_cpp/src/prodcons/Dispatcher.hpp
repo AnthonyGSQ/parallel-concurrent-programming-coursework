@@ -22,7 +22,8 @@ class Dispatcher : public Consumer<DataType> {
   /// Alias to the inherited queue for a more meaningful identifier
   Queue<DataType>*& fromQueue = Consumer<DataType>::consumingQueue;
 
-  /// This thread will distribute elements to the following queues
+  // mapa para asociar x key con y value, en este caso, asocia
+  // consumidores con sus respectivas colas
   std::map<KeyType, Queue<DataType>*> toQueues;
 
  public:

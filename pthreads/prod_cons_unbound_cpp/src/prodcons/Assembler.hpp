@@ -30,7 +30,7 @@ class Assembler
   DISABLE_COPY(Assembler);
 
  public:
-  /// Constructor
+  /// Constructor del assembler (no utilizado en este ejercicio)
   explicit Assembler(Queue<ConsumingType>* consumingQueue = nullptr
     , Queue<ProducingType>* producingQueue = nullptr
     , const ConsumingType& stopCondition = ConsumingType())

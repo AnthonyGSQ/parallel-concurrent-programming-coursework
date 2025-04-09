@@ -51,25 +51,27 @@ class Consumer : public virtual Thread {
     }
   }
 
-  /// Get access to the queue where this thread will consume
+  // funcion encargada de obtener la cola de los productos a consumir
+  // del consumidor actual
   inline Queue<DataType>* getConsumingQueue() {
     return this->consumingQueue;
   }
 
-  /// Set the queue where this thread will consume elements
+  /// inicializa la queue del consumidor actual
   inline void setConsumingQueue(Queue<DataType>* consumingQueue) {
     this->consumingQueue = consumingQueue;
   }
 
-  /// Creates a new empty queue owned by this consumer
+  /// crea una cola para el hilo consumidor actual
   void createOwnQueue() {
     assert(this->consumingQueue == nullptr);
     this->consumingQueue = new Queue<DataType>();
     this->ownsQueue = true;
   }
 
-  /// Consumes from its queue, util the stop condition is popped
-  /// For each data consumed, the @a consume method will be called
+  // funcion que consume todos los productos de la cola del hilo consumidor
+  // actual, en caso de esta estar vacia, espera a la llegada de mas productos
+  // y si recibe una senal de que todo ha terminado, finaliza el bucle
   virtual void consumeLoop() {
     assert(this->consumingQueue);
     while (true) {
