@@ -1,5 +1,6 @@
 // Copyright 2025 Anthony Sanchez
 #include "lamina.h"
+#include "FileManager.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -36,7 +37,7 @@ int lamina_constructor(int argc, char *argv[]) {
     int return_value = 0;
     // En caso de recibir menos parametros a los esperados, retorna EXIT_FAILURE
     if (argc < 2) {
-        error_manager(NULL, "Invalid entrance: you need to specify a .txt and"
+        error_manager(NULL, NULL, "Invalid entrance: you need to specify a .txt and"
             "the amounth of threads you want to use");
         return EXIT_FAILURE;
     }
@@ -49,14 +50,15 @@ int lamina_constructor(int argc, char *argv[]) {
     // while para leer todos los reglones del txt
     while (fgets(line, sizeof(line), file)) {
         Lamina *lamina = (Lamina *)calloc(1, sizeof(Lamina));
+        shared_file_data * fileobj = (shared_file_data*)calloc(1,sizeof(shared_file_data));
         if (!lamina) {
-            error_manager(lamina, "Error: could not allocate memory for"
+            error_manager(lamina, fileobj, "Error: could not allocate memory for"
                 "Lamina");
             return EXIT_FAILURE;
         }
-        snprintf(lamina->base_route, sizeof(lamina->base_route), "%s", argv[1]);
+        snprintf(fileobj->base_route, sizeof(fileobj->base_route), "%s", argv[1]);
 
-        char *lastSLash = strrchr(lamina->base_route, '/');
+        char *lastSLash = strrchr(fileobj->base_route, '/');
         if (!lastSLash) {
             fprintf(stderr, "Error: invalid route %s\n", argv[1]);
             free(lamina);
@@ -64,26 +66,26 @@ int lamina_constructor(int argc, char *argv[]) {
         }
         *(lastSLash + 1) = '\0';
         if (strcmp(line, "") == 0) {
-            error_manager(lamina, "Error: could not read a line from the .txt"
+            error_manager(lamina, fileobj, "Error: could not read a line from the .txt"
                 "file");
                 return EXIT_FAILURE;
         }
         // Si la cantidad de parametros recibidos no es 5
         // se retorna EXIT_FAILURE
-        return_value  = reading_parameters(lamina, lamina->binary_file_name,
+        return_value  = reading_parameters(lamina, fileobj, fileobj->binary_file_name,
             line);
         if (return_value == EXIT_FAILURE) {
             return EXIT_FAILURE;
         }
-        lamina->file = fopen(lamina->binary_file_name, "rb");
+        fileobj->file = fopen(fileobj->binary_file_name, "rb");
         printf("Creating lamina...\n");
         // si algo fallo en la creacion de la lamina o en la estabilizacion
         // de la misma, se retorna EXIT_FAILURE
-        return_value = create_lamina(lamina);
+        return_value = create_lamina(lamina, fileobj);
         if (return_value == EXIT_FAILURE) {
             return EXIT_FAILURE;
         }
-        delete_lamina(lamina);
+        delete_lamina(lamina, fileobj);
     }
     return EXIT_SUCCESS;
 }
@@ -104,42 +106,40 @@ int lamina_constructor(int argc, char *argv[]) {
  * es inválido, 
  *       la función imprime un mensaje de error y retorna `EXIT_FAILURE`.
  */
-int reading_parameters(Lamina *lamina, char* bin_file, char* line) {
+int reading_parameters(Lamina *lamina, shared_file_data* fileobj, char* bin_file, char* line) {
     char temp[256] = "";
     // si la linea del txt no cuenta con los 5 parametros esperados
     // retorna EXIT_FAILURE
     if (sscanf(line, "%s %" PRIu64 "%lf %lf %lf", temp, &lamina->time,
         &lamina->conductivity,
           &lamina->height, &lamina->epsilon) != 5) {
-            error_manager(lamina, "Error: The file of configuration does not"
+            error_manager(lamina, fileobj, "Error: The file of configuration does not"
                 "have the spected parameters");
                 return EXIT_FAILURE;
     }
     // se agrega la ruta al binario para poder leer el archivo
-  snprintf(lamina->binary_file_name,
-      sizeof(lamina->binary_file_name) + sizeof(temp), "%s%s",
-      lamina->base_route, temp);
-    printf("Binary file: %s\n", bin_file);
-    printf("Time: %"PRIu64 "\n", lamina->time);
+  snprintf(fileobj->binary_file_name,
+      sizeof(fileobj->binary_file_name) + sizeof(temp), "%s%s",
+      fileobj->base_route, temp);
     // Ifs que verifican que los valores recibidos del txt sean validos, si no
     // lo son, retornan EXIT_FAILURE
     if (lamina->time == 0) {
-        error_manager(lamina, "Invalid time");
+        error_manager(lamina, fileobj, "Invalid time");
         return EXIT_FAILURE;
     }
     printf("Conductivity: %.f\n", lamina->conductivity);
     if (lamina->conductivity <= 0) {
-        error_manager(lamina, "Invalid conductivity");
+        error_manager(lamina, fileobj, "Invalid conductivity");
         return EXIT_FAILURE;
     }
     printf("Height: %.f\n", lamina->height);
     if (lamina->height <= 0) {
-        error_manager(lamina, "Invalid height");
+        error_manager(lamina, fileobj, "Invalid height");
         return EXIT_FAILURE;
     }
     printf("Epsilon: %.15f\n", lamina->epsilon);
     if (lamina->epsilon <= 0) {
-        error_manager(lamina, "Invalid epsilon");
+        error_manager(lamina, fileobj, "Invalid epsilon");
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
@@ -158,30 +158,30 @@ int reading_parameters(Lamina *lamina, char* bin_file, char* line) {
  * @note Si la lectura del archivo falla o la reserva de memoria no es exitosa, 
  *       la función imprime un mensaje de error y retorna `EXIT_FAILURE`.
  */
-int create_lamina(Lamina *lamina) {
+int create_lamina(Lamina *lamina, shared_file_data* fileobj) {
     // Inicializamos rows y columns en 0 para evitar posibles valorea basura
     lamina->rows = 0;
     lamina->columns = 0;
     int return_value = 0;
     // Se lee el primer bloque de bytes donde se encuentra el numero de filas
-    if (fread(&lamina->rows, sizeof(uint64_t), 1, lamina->file) != 1) {
-        error_manager(lamina, "Error: Failed to read rows from file");
+    if (fread(&lamina->rows, sizeof(uint64_t), 1, fileobj->file) != 1) {
+        error_manager(lamina, fileobj, "Error: Failed to read rows from file");
         return EXIT_FAILURE;
     }
     // Si el numero de filas es invalido, se retorna EXIT_FAILURE
     if (lamina->rows <= 0) {
-        error_manager(lamina, "Error: Invalid number of rows");
+        error_manager(lamina, fileobj, "Error: Invalid number of rows");
         return EXIT_FAILURE;
     }
     // Se lee el segundo bloque de bytes donde se encuentra el numero de
     // columnas
-    if (fread(&lamina->columns, sizeof(uint64_t), 1, lamina->file) != 1) {
-        error_manager(lamina, "Error: Failed to read columns from file");
+    if (fread(&lamina->columns, sizeof(uint64_t), 1, fileobj->file) != 1) {
+        error_manager(lamina, fileobj, "Error: Failed to read columns from file");
         return EXIT_FAILURE;
     }
     // Si el numero de columnas es invalido, se retorna EXIT_FAILURE
     if (lamina->columns <= 0) {
-        error_manager(lamina, "Error: Invalid number of columns");
+        error_manager(lamina, fileobj, "Error: Invalid number of columns");
         return EXIT_FAILURE;
     }
     // Reservamos memoria para las filas de las dos matrices de la lamina
@@ -189,7 +189,7 @@ int create_lamina(Lamina *lamina) {
     lamina->next_temperatures = (double **)malloc(lamina->rows *
         sizeof(double*));
     if (!lamina->temperatures || !lamina->next_temperatures) {
-        error_manager(lamina, "Error: No se pudo reservar memoria para las"
+        error_manager(lamina, fileobj, "Error: No se pudo reservar memoria para las"
             "filas de las matrices.");
             return EXIT_FAILURE;
     }
@@ -203,17 +203,26 @@ int create_lamina(Lamina *lamina) {
 
         // Comprobar si la reserva de memoria falló para alguna fila
         if (!lamina->temperatures[i] || !lamina->next_temperatures[i]) {
-            error_manager(lamina, "Error: No se pudo reservar memoria para las"
+            error_manager(lamina, fileobj, "Error: No se pudo reservar memoria para las"
                 "filas de las matrices.");
                 return EXIT_FAILURE;
         }
     }
+    return_value = fillMatriz(lamina, fileobj);
+    if(return_value == EXIT_FAILURE) {
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}
+
+int fillMatriz(Lamina *lamina, shared_file_data* fileobj) {
+    int return_value = 0;
     // Bucle para leer los valores de la matriz
     for (size_t i = 0; i < lamina->rows; i++) {
         for (size_t j = 0; j < lamina->columns; j++) {
             if (fread(&lamina->temperatures[i][j], sizeof(double), 1,
-            lamina->file) != 1) {
-                error_manager(lamina, "Error: Failed to read temperature values"
+            fileobj->file) != 1) {
+                error_manager(lamina, fileobj, "Error: Failed to read temperature values"
                     "from file");
                 return EXIT_FAILURE;
             }
@@ -222,7 +231,7 @@ int create_lamina(Lamina *lamina) {
     // TODO(AnthonyGSQ): Impresion temporal, es solo para ver que todo sirva
     // hasta aca
     print_lamina(lamina);
-    return_value = update_lamina(lamina);
+    return_value = update_lamina(lamina, fileobj);
     if (return_value == EXIT_FAILURE) {
         return EXIT_FAILURE;
     }
@@ -243,7 +252,7 @@ int create_lamina(Lamina *lamina) {
  * @note Si la simulación falla al finalizar, la función devuelve
  * `EXIT_FAILURE`.
  */
-int update_lamina(Lamina * lamina) {
+int update_lamina(Lamina * lamina, shared_file_data *fileobj) {
     int return_value = 0;
     // variable donde se guarda la diferencia de la celda actual con su futuro
     // estado para compararla con el epsilon y saber si dicha celda esta estable
@@ -295,7 +304,8 @@ int update_lamina(Lamina * lamina) {
         lamina->k += lamina->time;
     }
     printf("Lamina estabilizada: \n");
-    return_value = finish_simulation(lamina);
+    print_lamina(lamina);
+    return_value = finish_simulation(lamina, fileobj);
     if (return_value == EXIT_FAILURE) {
         return EXIT_FAILURE;
     }
@@ -338,10 +348,11 @@ void update_cell(Lamina * lamina, uint64_t row, uint64_t column) {
  * Si la generación del reporte falla, retorna `EXIT_FAILURE`.
  * 
  * @param lamina Puntero a la estructura lamina
+ * @param fileobj PUntero a la estructura de archivos
  * @return `EXIT_SUCCESS` si genero el reporte, EXIT_FAILURE si no
  */
-int finish_simulation(Lamina * lamina) {
-    int return_value = report_file(lamina);
+int finish_simulation(Lamina * lamina, shared_file_data *fileobj) {
+    int return_value = report_file(lamina, fileobj);
     if (return_value == EXIT_FAILURE) {
         return EXIT_FAILURE;
     }
@@ -365,36 +376,31 @@ int finish_simulation(Lamina * lamina) {
  * estructura `Lamina`. Si no se puede abrir, intentará crear un archivo en una
  * ruta alternativa.
  */
-int report_file(Lamina *lamina) {
-    printf("tiempooo: %" PRIu64 "\n", lamina->k);
+int report_file(Lamina *lamina, shared_file_data *fileobj) {
     char text[260] = "";
     char temp[260] = "";
     char file_name[260] = "";
     char alternative_route[260] = "";
-    snprintf(file_name, sizeof(file_name), "%s", lamina->binary_file_name);
+    snprintf(file_name, sizeof(file_name), "%s", fileobj->binary_file_name);
     char *lastSLash = strrchr(file_name, '/') + 1;
     char *dot = strrchr(file_name, '.');
     *dot = '\0';
     snprintf(alternative_route, sizeof(alternative_route), "%s%s%s",
-    lamina->base_route, lastSLash, ".tsv");
-    snprintf(temp, sizeof(temp), "%s%s%s%s", lamina->base_route,
+    fileobj->base_route, lastSLash, ".tsv");
+    snprintf(temp, sizeof(temp), "%s%s%s%s", fileobj->base_route,
     "tsv/", lastSLash, ".tsv");
-    printf("FILENAME: %s\n", lastSLash);
-    printf("HOLA: %s\n", temp);
-    printf("ALTERNATIVE: %s\n", alternative_route);
     // si no se encuentra la carpeta tsv, crea el archivo tsv en la misma
     // carpeta donde se encuentra el binario leido
-    lamina->report_file = fopen(temp, "w+");
-    if (!lamina->report_file) {
+    fileobj->report_file = fopen(temp, "w+");
+    if (!fileobj->report_file) {
         printf("Error: could not open tsv file\n");
         printf("Creating new tsv file\n");
-        lamina->report_file = fopen(alternative_route, "w+");
+        fileobj->report_file = fopen(alternative_route, "w+");
     }
     snprintf(text, sizeof(temp), "%s\t%" PRIu64 "\t%g\t%g\t%g\t", temp,
     lamina->time, lamina->conductivity, lamina->height, lamina->epsilon);
     format_time(lamina->k, text, sizeof(text));
-    printf("FINAL TEXT: %s", text);
-    fprintf(lamina->report_file, "%s", text);
+    fprintf(fileobj->report_file, "%s", text);
     return EXIT_SUCCESS;
 }
 
@@ -418,10 +424,10 @@ void print_lamina(Lamina* lamina) {
  * @param error_message Un mensaje de error que se imprime en la salida de
  * error estándar.
  */
-void error_manager(Lamina *lamina, const char* error_message) {
+void error_manager(Lamina *lamina, shared_file_data *fileobj, const char* error_message) {
     fprintf(stderr, "%s\n", error_message);
     if (lamina) {
-        delete_lamina(lamina);
+        delete_lamina(lamina, fileobj);
     }
 }
 /**
@@ -433,7 +439,7 @@ void error_manager(Lamina *lamina, const char* error_message) {
  *
  * @param lamina Un puntero a la estructura lamina, si no existe, no hace nada.
  */
-void delete_lamina(Lamina * lamina) {
+void delete_lamina(Lamina * lamina, shared_file_data* fileobj) {
     if (lamina) {
         if (lamina->temperatures) {
             for (size_t i = 0; i < lamina->rows; i++) {
@@ -447,13 +453,8 @@ void delete_lamina(Lamina * lamina) {
             }
             free(lamina->next_temperatures);
         }
-        if (lamina->file) {
-            fclose(lamina->file);
-        }
-        if (lamina->report_file) {
-            fclose(lamina->report_file);
-        }
-            free(lamina);
+        delete_files(fileobj);
+        free(lamina);
     }
 }
 /**
