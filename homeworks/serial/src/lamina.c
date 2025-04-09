@@ -206,6 +206,15 @@ int create_lamina(Lamina *lamina) {
                 return EXIT_FAILURE;
         }
     }
+    return_value = fillMatriz(lamina);
+    if(return_value == EXIT_FAILURE) {
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+}
+
+int fillMatriz(Lamina *lamina) {
+    int return_value = 0;
     // Bucle para leer los valores de la matriz
     for (size_t i = 0; i < lamina->rows; i++) {
         for (size_t j = 0; j < lamina->columns; j++) {

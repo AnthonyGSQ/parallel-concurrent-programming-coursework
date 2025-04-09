@@ -80,7 +80,15 @@ int reading_parameters(Lamina *lamina, char* filename, char* line);
  * @return `EXIT_SUCCESS` si la memoria se reserva correctamente, `EXIT_FAILURE` en caso de error.
  */
 int create_lamina(Lamina *lamina);
-
+/***
+ * @brief Rellena la matriz con los valores del archivo binario
+ * 
+ * @param lamina Estructura lamina con los datos de la simulacion
+ * 
+ * @return EXIT_SUCCESS en caso de poder rellenar toda la matriz con los valores
+ *  del binario, EXIT_FAILURE en caso contrario
+ */
+int fillMatriz(Lamina * lamina);
 /**
  * @brief Genera un reporte con los datos de la lamina en formato `.tsv`.
  * 
