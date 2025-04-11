@@ -136,8 +136,12 @@ funcion plan_thread_distribution(lamina, fileobj) {
         parameter := lamina->columns
     FIn si
     // Caso 1 y caso 2 (esta operacion cubre ambos, al menos en pseudo)
-    Si thread_num < parameter hacer o thread_num == parameter
+    Si thread_num < parameter hacer
     matrix_block_size := lamina->temperatures_size / (thread_num/parameter)
+    // Mismo caso que caso 1 pero evitando size 0
+    SIno si thread_num == parameter hacer
+        matrix_block_size = (lamina->temperatures_size /
+            lamina->temperatures_size) + 1
     // Caso 3
     Sino
     // caso 3a
@@ -157,32 +161,28 @@ función update_lamina(lamina):
     inicializar diff a 0
     inicializar unstable_cells a 1
     inicializar temp como NULL
-
+    crear n hilos
+    crear n structs privados
     mientras unstable_cells > 0:
-        // Resetea unstable_cells después de cada ciclo completo
-        unstable_cells = 0
-
-        // Resetea la matriz next_temperatures
-        para cada fila i de 0 a lamina->rows:
-            para cada columna j de 0 a lamina->columns:
-                si la celda está en el borde:
+        Para i hasta thread_num hacer
+                Si la celda está en el borde:
                     continuar
-                lamina->next_temperatures[i][j] = 0
-
-        // Actualiza cada celda de la matriz
-        para cada fila i de 0 a lamina->rows:
-            para cada columna j de 0 a lamina->columns:
-                si la celda está en el borde:
-                    continuar
-                actualizar_celda(lamina, i, j)
-                diff = diferencia entre lamina->next_temperatures[i][j] y lamina->temperatures[i][j]
-                si diff > lamina->epsilon:
-                    unstable_cells++
-
+                Fin si
+                // aqui va la logica de decirle a cada hilo en su private_data
+                // sus respectivos x1, x2, y1, y2 para que trabajen la funcion
+                //update_lamina_block
+                // por increase, entiendase asignar a cada hilo x bloque de la
+                // matriz, moviendo las coordenadas al siguiente bloque a
+                // procesar y enviarle al hilo dichas coords a recorrer
+                increase x1, x2, y1, y2
+                guardar x1, x2, y1, y2 en el private_data del thread actual
+                thread[i](update_lamina_block(lamina, i, j, parameter
+                    private_data_t[i]));
+        Fin Para
         // Intercambia las matrices
         lamina->temperatures pasa a ser lamina->next_temperatures
         lamina->next_temperatures pasa a ser lamina->temperatures
-
+        // aumentamos el tiempo transcurrido de la simulacion
         lamina->k += lamina->time
     FIN MIENTRAS
 
@@ -190,10 +190,29 @@ función update_lamina(lamina):
 
     return_value = finish_simulation(lamina)
     si return_value == EXIT_FAILURE:
-        retornar EXIT_FAILURE
+        retornar EXIT_FAILUREPara j = 0 hasta lamina->columns hacer
 
 retornar EXIT_SUCCESS
 
+funcion update_lamina_block(OBJETO lamina, OBJETO fileobj, PUNTERO private_data,
+    ENTERO parameter, OBJETO private_data_t){
+    // bucle para recorrer el bloque asignado a cada thread, tomando las 4
+    // coords del bloque correspondiente de cada hilo
+    int result = 0;
+    int unstable_cells = 0;
+    Si parameter == lamina->rows hacer
+        Para i = private_data_t->x1 hasta private_data_t->x2 hacer
+            Para j = private_data_t->y1 hasta private_data_t->y2 hacer
+                result = actualizar_celda(lamina, i, j)
+                Si result == EXIT_FAILURE hacer
+                    unstable_cells++;
+                Fin SI
+            Fin para
+        Fin para
+    retornar unstable_cells;
+}
+// los retornos agregados indicaran a cada hilo si una de las celdas que tratan
+// es inestable actualmente, para asi continuar actualizando estados
 funcion void update_cell(OBJETO lamina, ENTERO row, ENTERO column) {
     // aseguramos que no se procesara una celda invalida
     Si la celda recibida no se sale de los bordes hacer 
@@ -203,7 +222,14 @@ funcion void update_cell(OBJETO lamina, ENTERO row, ENTERO column) {
         ((lamina->k * lamina->conductivity) /
         (lamina->height * lamina->height)) *
         (up + down + right + left - (4 * lamina->temperatures[row][column]));
+        double diff = 0;
+        diff = diferencia entre lamina->next_temperatures[i][j] y
+            lamina->temperatures[i][j]
+        Si diff > lamina->epsilon:
+            retornar EXIT_FAILURE;
+        Fin SI
     FIN SI
+    retornar EXIT_SUCCESS;
 }
 
 funcion int finish_simulation(OBJETO lamina) {
