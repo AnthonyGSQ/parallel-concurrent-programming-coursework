@@ -1,4 +1,10 @@
 incluir lamina.h
+// estructura privada para los hilos, cuenta con 4 variables
+// las cuales son las coordenadas desde donde deben iniciar el
+// recorrido del bloque de la matriz correspondiente a cada hilo
+// (las variables con el uno) y las coordenadas donde termina dicho
+// recorrido (las variables con el dos).
+
 // implementacion de las funciones
 función lamina_constructor(argc, argv):
     return_value = 0
@@ -104,7 +110,7 @@ función create_lamina(lamina):
     leer del binario la cantidad de columnas
     crear las filas
     crear las columnas
-
+    llamar a plan_thread_distribution
 retornar EXIT_SUCCESS
 
 funcion fill_lamina(lamina) {
@@ -115,46 +121,29 @@ funcion fill_lamina(lamina) {
     Fin para
 }
 // esta funcion estara encargada de averiguar cuanto trabajo debe realizar cada
-// thread, primeramente toma como parametro el valor mas alto entre
-// filas y columnas, una vez hecho esto, cae en los siguientes casos:
-// 1- Menos threads que el parametro: Divide la matriz thread_num/parametro
-// 2- Cantidad de threads igual al parametro: Una linea por hilo
-// (fila o columna) 
-// 3- Mas threads que parametro: Aqui suceden 2 cosas:
-// a) thread_num < filas * columnas: Seguimos la logica del caso 1 y dividimos
-// el otro valor (si parametro es filas, este otro valor sera columnas y
-// viceversa) hasta tener bloques suficientes para cada hilo
-// TODO (AnthonyGSQ): falta decidir cual sera el tope para esto
-// thread_num >= filas * columnas:  Asignamos un tope para evitar que cada hilo
-// trabaje una celda pues esto no es eficiente, una vez asignado el tope
-// le damos bloques de la matriz a cada hilo, el tope sera las dimensiones de
-// este bloque
+// thread
 funcion plan_thread_distribution(lamina, fileobj) {
-    Si lamina->rows >= lamina->columns hacer
-        parameter := lamina->rows
-    Sino hacer
-        parameter := lamina->columns
-    FIn si
-    // Caso 1 y caso 2 (esta operacion cubre ambos, al menos en pseudo)
-    Si thread_num < parameter hacer
-    matrix_block_size := lamina->temperatures_size / (thread_num/parameter)
-    // Mismo caso que caso 1 pero evitando size 0
-    SIno si thread_num == parameter hacer
-        matrix_block_size = (lamina->temperatures_size /
-            lamina->temperatures_size) + 1
-    // Caso 3
-    Sino
-    // caso 3a
-    // TODO(AnthonyGSQ): falta agregar el calculo del tope optimo, posiblemente
-    // sea mejor hacerlo en tarea4
-        Si thread_num < (lamina->rows * lamina->columns) hacer
-            matrix_block_size := lamina->temperatures_size
-                / (thread_num/parameter)
-        // caso 3b
-        Sino hacer
-            thread_num := thread_num - tope_optimo;
-            tomar caso 3a
-        Fin si
+    // no vale la pena crear muchos hilos para matrices pequenas
+    Si la lamina tiene menos de 100 celdas hacer
+        thread_count = 1;
+        retornar
+    Fin si
+    // limitamos los hilos si son demaciados
+    Si thread_count > total_cells hacer
+        thread_count = total_cells;
+    Fin si
+    cells_per_thread = total_cells / thread_count
+    // debido al overhead, es conveniente que cada hilo procese al
+    // menos 100 celdas
+    SI cells_per_thread < 100 hacer
+        cells_per_thread = 100;
+        thread_count = total_cells / 100
+    Fin si
+    // estas son las cantidades de filas/columnas que debera procesar
+    // cada hilo.
+    public_data->x_increment = lamina->rows / thread_count;
+    public_data->y_increment = lamina->columns / thread_count;
+    retornar
 }
 
 función update_lamina(lamina):
@@ -193,7 +182,8 @@ función update_lamina(lamina):
         retornar EXIT_FAILUREPara j = 0 hasta lamina->columns hacer
 
 retornar EXIT_SUCCESS
-
+// funcion encargada de hacer que cada hilo actualice unicamente su respectivo
+// bloque de la matriz
 funcion update_lamina_block(OBJETO lamina, OBJETO fileobj, PUNTERO private_data,
     ENTERO parameter, OBJETO private_data_t){
     // bucle para recorrer el bloque asignado a cada thread, tomando las 4

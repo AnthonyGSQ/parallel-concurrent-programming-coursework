@@ -12,6 +12,19 @@ ESTRUCTURA Lamina {
     MATRIZ_DE_FLOTANTES temperaturas
 }
 
+ESTRUCTURA {
+    int x1;
+    int x2;
+    int y1;
+    int y2;
+} private_data_t
+
+ESTRUCTURA {
+    size_t x_increment
+    size_t y_increment
+    private_data_t *private_data
+} public_data_t
+
 // Funcion encargada del recibimiento de los parametros, abrir los archivos
 // crear el objeto lamina y llamar a las funciones validate_entrance(),
 // reading_parameters() y finalmente a create_lamina().
@@ -31,6 +44,24 @@ int reading_parameters(Lamina *lamina, STRING filename, STRING line);
 // En caso de no encontrar el archivo binario, no poder reservar memoria
 // para las matrices o recibir un numero invalido de filas o columnas
 // retorna EXIT_FAILURE
+
+// esta funcion estara encargada de averiguar cuanto trabajo debe realizar cada
+// thread, primeramente toma como parametro el valor mas alto entre
+// filas y columnas, una vez hecho esto, cae en los siguientes casos:
+// 1- Menos threads que el parametro: Divide la matriz thread_num/parametro
+// 2- Cantidad de threads igual al parametro: Una linea por hilo
+// (fila o columna) 
+// 3- Mas threads que parametro: Aqui suceden 2 cosas:
+// a) thread_num < filas * columnas: Seguimos la logica del caso 1 y dividimos
+// el otro valor (si parametro es filas, este otro valor sera columnas y
+// viceversa) hasta tener bloques suficientes para cada hilo
+// TODO (AnthonyGSQ): falta decidir cual sera el tope para esto
+// thread_num >= filas * columnas:  Asignamos un tope para evitar que cada hilo
+// trabaje una celda pues esto no es eficiente, una vez asignado el tope
+// le damos bloques de la matriz a cada hilo, el tope sera las dimensiones de
+// este bloque
+funcion plan_thread_distribution(lamina, fileobj)
+
 int create_lamina(Lamina *lamina);
 
 // Funcion encargada de crear el archivo de reporte tsv de cada respectiva
@@ -43,6 +74,12 @@ int report_file(Lamina *lamina);
 // si no se esta trabajando con un borde, si la celda actual es un borde
 // la ignora.
 int update_lamina(Lamina * lamina);
+
+// funcion encargada de hacer que cada hilo actualice unicamente su respectivo
+// bloque de la matriz, tomando como referencia las coordenadas dentro
+// del struct privado del hilo actual: x1, x2, y1, y2.
+funcion update_lamina_block(OBJETO lamina, OBJETO fileobj, PUNTERO private_data,
+    ENTERO parameter, OBJETO private_data_t)
 
 // Funcion encargada de actualizar la celda de la posicion recibida,
 // utilizando la formula de difusion de calor y guardandola en la
