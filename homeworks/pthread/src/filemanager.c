@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 /**
  * @brief Genera y guarda un archivo de reporte en formato TSV con la
@@ -23,7 +24,7 @@
  * estructura `Lamina`. Si no se puede abrir, intentará crear un archivo en una
  * ruta alternativa.
  */
-int report_file(Lamina *lamina, shared_file_data *fileobj) {
+int report_file(Lamina *lamina, file_struct *fileobj) {
     char text[260] = "";
     char temp[260] = "";
     char file_name[260] = "";
@@ -51,7 +52,7 @@ int report_file(Lamina *lamina, shared_file_data *fileobj) {
     return EXIT_SUCCESS;
 }
 
-int delete_files(shared_file_data *fileobj) {
+int delete_files(file_struct *fileobj) {
     if (fileobj->file) {
         fclose(fileobj->file);
     }

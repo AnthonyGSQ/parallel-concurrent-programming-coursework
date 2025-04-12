@@ -38,11 +38,26 @@ typedef struct Lamina {
      * Este valor define el umbral de estabilidad para detener la simulación
      * cuando las temperaturas ya no cambian significativamente entre pasos.
      */
+    double thread_count;
     double epsilon;
+    public_data_t *public_data;
     double **temperatures;
     double **next_temperatures;
-    
 } Lamina;
+
+typedef struct {
+    double x1;
+    double x2;
+    double y1;
+    double y2;
+} private_data_t;
+
+typedef struct {
+    size_t x_increment;
+    size_t y_increment;
+    private_data_t *private_data;
+} public_data_t;
+
 /**
  * @brief Construye el objeto Lamina a partir de los parámetros dados.
 
@@ -66,7 +81,7 @@ int lamina_constructor(int argc, char *argv[]);
  * @return `EXIT_SUCCESS` si los parámetros son válidos, `EXIT_FAILURE` si hay
  * un error.
  */
-int reading_parameters(Lamina *lamina, shared_file_data* fileobj, char* filename, char* line);
+int reading_parameters(Lamina *lamina, file_struct* fileobj, char* line);
 /**
  * @brief Reserva memoria para las matrices de temperaturas y lee el archivo binario.
  * 
@@ -74,7 +89,7 @@ int reading_parameters(Lamina *lamina, shared_file_data* fileobj, char* filename
  * 
  * @return `EXIT_SUCCESS` si la memoria se reserva correctamente, `EXIT_FAILURE` en caso de error.
  */
-int create_lamina(Lamina *lamina, shared_file_data* fileobj);
+int create_lamina(Lamina *lamina, file_struct* fileobj);
 /***
  * @brief Rellena la matriz con los valores del archivo binario
  * 
@@ -83,15 +98,15 @@ int create_lamina(Lamina *lamina, shared_file_data* fileobj);
  * @return EXIT_SUCCESS en caso de poder rellenar toda la matriz con los valores
  *  del binario, EXIT_FAILURE en caso contrario
  */
-int fillMatriz(Lamina * lamina, shared_file_data* fileobj);
-/**
- * @brief Genera un reporte con los datos de la lamina en formato `.tsv`.
- * 
- * @param lamina Estructura Lamina con los datos a reportar.
- * 
- * @return `EXIT_SUCCESS` si el reporte se genera correctamente, `EXIT_FAILURE` en caso de error.
+int fillMatriz(Lamina * lamina, file_struct* fileobj);
+/***
+ * @brief Funcion encargada de calcular cuanto trabajo debe realizar cada hilo
+ * , es decir, calcula el tamano del bloque a procesar para los hilos de manera
+ *  en que cada hilo hara una cantidad similar de trabajo.abort
+ * @param lamina Puntero al struct lamina actual
+ * @param fileobj Puntero al struct del manejo de archivos
  */
-
+void plan_thread_distribution(Lamina *lamina, file_struct * fileobj);
 /**
  * @brief Actualiza la lamina del estado k al estado k+1.
  * 
@@ -99,16 +114,23 @@ int fillMatriz(Lamina * lamina, shared_file_data* fileobj);
  * 
  * @return `EXIT_SUCCESS` si la actualización es exitosa.
  */
-int update_lamina(Lamina *lamina, shared_file_data *fileobj);
-
+int update_lamina(Lamina *lamina, file_struct *fileobj);
+/***
+ * @brief Actualiza el bloque i de la matriz, a cargo del hilo i
+ * @param lamina puntero a la lamina actual
+ * @param fileobj puntero al struct encargado del manejo de archivos
+ * @param private_data_t puntero a los datos privados de cada hilo
+ */
+void* update_lamina_block(void *data);
 /**
- * @brief Actualiza una celda específica en la lamina usando la fórmula de difusión de calor.
+ * @brief Actualiza una celda específica en la lamina usando la fórmula de
+ * difusión de calor.
  * 
  * @param lamina Estructura Lamina con las temperaturas actuales.
  * @param row Fila de la celda a actualizar.
  * @param column Columna de la celda a actualizar.
  */
-void update_cell(Lamina *lamina, uint64_t row, uint64_t column);
+int update_cell(Lamina *lamina, uint64_t row, uint64_t column);
 
 /**
  * @brief Finaliza la simulación y guarda los resultados en archivos.
@@ -117,7 +139,7 @@ void update_cell(Lamina *lamina, uint64_t row, uint64_t column);
  * 
  * @return `EXIT_SUCCESS` si la simulación se completa exitosamente.
  */
-int finish_simulation(Lamina *lamina, shared_file_data *fileobj);
+int finish_simulation(Lamina *lamina, file_struct *fileobj);
 
 /**
  * @brief Imprime la matriz de temperaturas en la consola.
@@ -132,14 +154,14 @@ void print_lamina(Lamina *lamina);
  * @param lamina Estructura Lamina que se va a liberar.
  * @param error_message Mensaje de error a mostrar.
  */
-void error_manager(Lamina *lamina, shared_file_data* fileobj, const char* error_message);
+void error_manager(Lamina *lamina, file_struct* fileobj, const char* error_message);
 
 /**
  * @brief Libera toda la memoria ocupada por la lamina.
  * 
  * @param lamina Estructura Lamina cuya memoria se va a liberar.
  */
-void delete_lamina(Lamina *lamina, shared_file_data *fileobj);
+void delete_lamina(Lamina *lamina, file_struct *fileobj);
 
 /**
  * @brief Convierte el tiempo en segundos a un formato legible (horas/días/meses).

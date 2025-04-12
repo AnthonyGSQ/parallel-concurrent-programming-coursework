@@ -28,9 +28,9 @@ typedef struct {
      */
     FILE* file;
     FILE* report_file;
-} shared_file_data;
+} file_struct;
 typedef struct Lamina Lamina;
 
-int report_file(Lamina *lamina, shared_file_data *file_obj);
-int delete_files(shared_file_data *fileobj);
+int report_file(Lamina *lamina, file_struct *file_obj);
+int delete_files(file_struct *fileobj);
 #endif
