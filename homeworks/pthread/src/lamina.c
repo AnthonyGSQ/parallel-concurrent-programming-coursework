@@ -10,6 +10,7 @@
 #include <math.h>
 #include <time.h>
 #include <pthread.h>
+#include <assert.h>
 /***
  * @file lamina.c
  * @brief Implementacion de la funcion lamina.c
@@ -58,9 +59,11 @@ int lamina_constructor(int argc, char *argv[]) {
     }
     char line[256] = "";
     // while para leer todos los reglones del txt
+    printf("THREAD_COUNT: %zu\n", thread_count);
     while (fgets(line, sizeof(line), file)) {
         Lamina *lamina = (Lamina *)calloc(1, sizeof(Lamina));
-        lamina->thread_count = thread_count;
+        public_data_t *public_data = calloc(1, sizeof(public_data_t));
+        public_data->thread_count = thread_count;
         file_struct * fileobj = (file_struct*)calloc(1,sizeof(file_struct));
         if (!lamina) {
             error_manager(lamina, fileobj, "Error: could not allocate memory for"
@@ -92,10 +95,15 @@ int lamina_constructor(int argc, char *argv[]) {
         printf("Creating lamina...\n");
         // si algo fallo en la creacion de la lamina o en la estabilizacion
         // de la misma, se retorna EXIT_FAILURE
-        return_value = create_lamina(lamina, fileobj);
+        return_value = create_lamina(lamina, fileobj, public_data);
         if (return_value == EXIT_FAILURE) {
             return EXIT_FAILURE;
         }
+        return_value = update_lamina(lamina, fileobj, public_data);
+        if (return_value == EXIT_FAILURE) {
+        return EXIT_FAILURE;
+    }
+        free(public_data);
         delete_lamina(lamina, fileobj);
     }
     return EXIT_SUCCESS;
@@ -169,7 +177,8 @@ int reading_parameters(Lamina *lamina, file_struct* fileobj, char* line) {
  * @note Si la lectura del archivo falla o la reserva de memoria no es exitosa, 
  *       la función imprime un mensaje de error y retorna `EXIT_FAILURE`.
  */
-int create_lamina(Lamina *lamina, file_struct* fileobj) {
+int create_lamina(Lamina *lamina, file_struct* fileobj,
+    public_data_t* public_data) {
     // Inicializamos rows y columns en 0 para evitar posibles valorea basura
     lamina->rows = 0;
     lamina->columns = 0;
@@ -223,12 +232,11 @@ int create_lamina(Lamina *lamina, file_struct* fileobj) {
     if(return_value == EXIT_FAILURE) {
         return EXIT_FAILURE;
     }
-    plan_thread_distribution(lamina, fileobj);
+    plan_thread_distribution(lamina, public_data);
     return EXIT_SUCCESS;
 }
 
 int fillMatriz(Lamina *lamina, file_struct* fileobj) {
-    int return_value = 0;
     // Bucle para leer los valores de la matriz
     for (size_t i = 0; i < lamina->rows; i++) {
         for (size_t j = 0; j < lamina->columns; j++) {
@@ -243,43 +251,40 @@ int fillMatriz(Lamina *lamina, file_struct* fileobj) {
     // TODO(AnthonyGSQ): Impresion temporal, es solo para ver que todo sirva
     // hasta aca
     print_lamina(lamina);
-    return_value = update_lamina(lamina, fileobj);
-    if (return_value == EXIT_FAILURE) {
-        return EXIT_FAILURE;
-    }
     return EXIT_SUCCESS;
 }
 
-void plan_thread_distribution(Lamina *lamina, file_struct * fileobj) {
-    public_data_t *public_data = (public_data_t*)calloc(1,
-        sizeof(public_data_t));
+void plan_thread_distribution(Lamina *lamina,
+    public_data_t* public_data) {
     double total_cells = lamina->rows * lamina->columns;
     // en caso de haber menos de 100 celdas, no vale la pena crear n hilos
     // para realizar el trabajo de la matriz debido al overhead
     if (total_cells < 100) {
         printf("Warning!: Not enought cells to make the use of threads"
             " worth it, instead the program is gonna use only one thread\n");
-        lamina->thread_count = 1;
+        public_data->thread_count = 1;
+        public_data->x_increment = lamina->rows;
+        public_data->y_increment = lamina->columns;
         return;
     }
     // Llegados aqui, existen suficientes celdas para considerar la creacion de
     // los hilos solicitados para el procesamiento de la matriz
 
-    if (lamina->thread_count > total_cells) {
-        lamina->thread_count = total_cells;
+    if (public_data->thread_count > total_cells) {
+        public_data->thread_count = total_cells;
     }
-    size_t cells_per_thread = total_cells / lamina->thread_count;
+    size_t cells_per_thread = total_cells / public_data->thread_count;
     if ( cells_per_thread < 100) {
         cells_per_thread = 100;
-        lamina->thread_count = total_cells / 100;
+        public_data->thread_count = total_cells / 100;
     }
-    printf("Total rows: % " PRIu64 "\n", lamina->rows);
+    printf("Total rows: %" PRIu64 "\n", lamina->rows);
     printf("Total columns %" PRIu64 ":\n", lamina->columns);
     printf("Número total de celdas: %f\n", total_cells);
-    printf("Número de hilos: %f\n", lamina->thread_count);
+    printf("Número de hilos: %zu\n", public_data->thread_count);
     printf("Celdas por hilo (mínimo 100): %zu\n", cells_per_thread);
-    public_data->x_increment = lamina->rows/lamina->thread_count;
-    public_data->y_increment = lamina->columns/lamina->thread_count;
+    public_data->x_increment = lamina->rows/public_data->thread_count;
+    public_data->y_increment = lamina->columns/public_data->thread_count;
     printf("Filas por hilo: %zu\n", public_data->x_increment);
     printf("Columnas por hilo: %zu\n", public_data->y_increment);
 }
@@ -299,20 +304,19 @@ void plan_thread_distribution(Lamina *lamina, file_struct * fileobj) {
  * @note Si la simulación falla al finalizar, la función devuelve
  * `EXIT_FAILURE`.
  */
-int update_lamina(Lamina * lamina, file_struct *fileobj) {
+int update_lamina(Lamina * lamina, file_struct *fileobj,
+    public_data_t* public_data) {
     int return_value = 0;
-    // variable donde se guarda la diferencia de la celda actual con su futuro
-    // estado para compararla con el epsilon y saber si dicha celda esta estable
-    double diff = 0;
     // variable para contar cuantas celdas no estan estables, con solo una no
     // estable, el while se vuelve a ejecutar
-    size_t unstable_cells = 1;
+    size_t unstable_blocks = 1;
     double** temp = NULL;
-    while (unstable_cells > 0) {
+    while (unstable_blocks > 0) {
+        printf("iteracion!!\n");
         // El valor de unstable_cells se resetea despues de procesar una vez
         // la lamina entera, asi aseguramos que el bucle no termine hasta
         // no encontrar ni una sola celda inestable
-        unstable_cells = 0;
+        unstable_blocks = 0;
         // Para evitar calculos incorrectos, se resetea la
         //  matriz next_temperatures
         // TODO(AnthonyGSQ): quiza no es necesario este doble for
@@ -326,11 +330,32 @@ int update_lamina(Lamina * lamina, file_struct *fileobj) {
                 lamina->next_temperatures[i][j] = 0;
             }
         }
-
-        for (size_t i = 0; i < lamina->thread_count; i++) {
-                // aqui se crean los threads
-
+        size_t thread_count = public_data->thread_count;
+        // creamos n structs para los n threads, esto en cada iteracion
+        private_data_t* private_data = calloc(thread_count,
+            sizeof(private_data_t));
+        if (!private_data) {
+            error_manager(lamina,fileobj,
+                "Error: could not make calloc for private_data");
+            return EXIT_FAILURE;
         }
+        public_data->lamina = lamina;
+        pthread_t* threads = calloc(thread_count, sizeof(pthread_t));
+        // ciclo a cargo de crear los hilos y asignarles trabajo
+        for (size_t i = 0; i < thread_count; i++) {
+            private_data[i].thread_num = i;
+            printf("HOLA: %zu \n", private_data[i].thread_num);
+            private_data[i].public_data = public_data;
+            pthread_create(&threads[i], NULL, update_lamina_block,
+                &private_data[i]);
+        }
+        // OJO FALTA LOGICA DE UNSTABLE CELLS
+        // ciclo a cargo de liberar todos los hilos y sus respectivos structs
+        for (size_t i = 0; i < public_data->thread_count; i++) {
+            pthread_join(threads[i], NULL);
+        }
+        free(threads);
+        free(private_data);
         // EL estado k+1 pasa a ser el estado k y el estado k pasa a ser el
         // estado k+1 para ser reseteada enteramente.
         temp = lamina->temperatures;
@@ -348,24 +373,50 @@ int update_lamina(Lamina * lamina, file_struct *fileobj) {
 }
 // la idea sera que esta funcion sea la de for for de cada hilo
 // los bordes que los lea desde el private data de cada hilo
-
 void* update_lamina_block(void* data) {
-    Lamina lamina = *(Lamina*) data;
-    size_t start_row = lamina.public_data->private_data->x1;
-    size_t finish_row = lamina.public_data->private_data->x2;
-    size_t start_column = lamina.public_data->private_data->y1;
-    size_t finish_column = lamina.public_data->private_data->y2;
-    for (size_t i = start_row; i < finish_row; i++){
-        for(size_t j = start_column; j < finish_column; j++){
+    assert(data);
+    private_data_t *private_data = (private_data_t*) data;
+    printf("HOLAHOLA: %zu \n", private_data->thread_num);
+    size_t x_increment = private_data->public_data->x_increment;
+    size_t y_increment = private_data->public_data->y_increment;
+    private_data->x1 = private_data->thread_num * x_increment;
+    private_data->y1 = private_data->thread_num * y_increment;
+    // si es el ultimo thread, recorrer hasta el final de la matriz
+    // esto en caso de que la division en bloques de la matriz no sea
+    // exacta y por ende sobren filas/columnas sin asignar.
+    if (private_data->thread_num ==
+        private_data->public_data->thread_count) {
+        private_data->x2 = private_data->public_data->lamina->rows;
+        private_data->y2 = private_data->public_data->lamina->columns;
+    // si no es el ultimo thread, recorre un bloque de la matriz normal
+    } else {
+        private_data->x2 = (private_data->thread_num + 1) * x_increment;
+        private_data->y2 = (private_data->thread_num + 1) * y_increment;
+    }
+    printf(" Thread #%zu\n", private_data->thread_num);
+    printf("   lamina->rows = %zu\n", private_data->public_data->lamina->rows);
+    printf("   lamina->columns = %zu\n", private_data->public_data->lamina->columns);
+    printf("   x_increment = %zu\n", private_data->public_data->x_increment);
+    printf("   y_increment = %zu\n", private_data->public_data->y_increment);
+    printf("   thread_count = %zu\n", private_data->public_data->thread_count);
+    printf("   x1 = %zu, x2 = %zu\n", private_data->x1, private_data->x2);
+    printf("   y1 = %zu, y2 = %zu\n", private_data->y1, private_data->y2);
+    size_t unstable_cells = 0;
+    for (size_t i = private_data->x1; i < private_data->x2; i++){
+        for(size_t j = private_data->y1; j < private_data->y2; j++){
             // if para ignorar los bordes de la matriz
-            if (i == 0 || i == lamina.rows - 1 ||
-                j == 0 || j == lamina.columns -1) {
+            if (i == 0 || i == private_data->public_data->lamina->rows - 1 ||
+                j == 0 || j == private_data->public_data->lamina->columns -1) {
                   continue;
             }
-            update_cell(&lamina, i ,j);
+            unstable_cells +=
+            update_cell(private_data->public_data->lamina, i ,j);
         }
     }
-    return;
+    // guardamos el hecho de que existen celulas inestables, para avisar a
+    // update_lamina y que esta continue actualizando la lamina
+    private_data->unstable_cells = unstable_cells;
+    return NULL;
 }
 /**
  * @brief Actualiza la temperatura de la celda recibida.
@@ -381,7 +432,7 @@ void* update_lamina_block(void* data) {
  * @note Solo se actualizan las celdas internas de la matriz, evitando los
  * bordes.
  */
-int update_cell(Lamina * lamina, uint64_t row, uint64_t column) {
+size_t update_cell(Lamina * lamina, size_t row, size_t column) {
     // aseguramos que no se procesara una celda invalida
     size_t unstable_cells = 0;
     double diff = 0;

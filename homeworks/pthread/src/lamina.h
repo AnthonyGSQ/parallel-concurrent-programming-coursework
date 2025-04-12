@@ -15,7 +15,7 @@
  * finitas.
  * Incluye las dimensiones de la lámina, las temperaturas en la misma y los
  * parámetros a utilizar
- */
+ */ 
 typedef struct Lamina {
     uint64_t rows;
     uint64_t columns;
@@ -40,24 +40,24 @@ typedef struct Lamina {
      */
     double thread_count;
     double epsilon;
-    public_data_t *public_data;
     double **temperatures;
     double **next_temperatures;
 } Lamina;
-
-typedef struct {
-    double x1;
-    double x2;
-    double y1;
-    double y2;
-} private_data_t;
-
 typedef struct {
     size_t x_increment;
     size_t y_increment;
-    private_data_t *private_data;
+    size_t thread_count;
+    Lamina* lamina;
 } public_data_t;
-
+typedef struct {
+    size_t x1;
+    size_t x2;
+    size_t y1;
+    size_t y2;
+    size_t thread_num;
+    size_t unstable_cells;
+    public_data_t* public_data;
+} private_data_t;
 /**
  * @brief Construye el objeto Lamina a partir de los parámetros dados.
 
@@ -89,7 +89,7 @@ int reading_parameters(Lamina *lamina, file_struct* fileobj, char* line);
  * 
  * @return `EXIT_SUCCESS` si la memoria se reserva correctamente, `EXIT_FAILURE` en caso de error.
  */
-int create_lamina(Lamina *lamina, file_struct* fileobj);
+int create_lamina(Lamina *lamina, file_struct* fileobj, public_data_t *public_data);
 /***
  * @brief Rellena la matriz con los valores del archivo binario
  * 
@@ -106,7 +106,8 @@ int fillMatriz(Lamina * lamina, file_struct* fileobj);
  * @param lamina Puntero al struct lamina actual
  * @param fileobj Puntero al struct del manejo de archivos
  */
-void plan_thread_distribution(Lamina *lamina, file_struct * fileobj);
+void plan_thread_distribution(Lamina *lamina,
+    public_data_t* public_data);
 /**
  * @brief Actualiza la lamina del estado k al estado k+1.
  * 
@@ -114,7 +115,8 @@ void plan_thread_distribution(Lamina *lamina, file_struct * fileobj);
  * 
  * @return `EXIT_SUCCESS` si la actualización es exitosa.
  */
-int update_lamina(Lamina *lamina, file_struct *fileobj);
+int update_lamina(Lamina *lamina, file_struct *fileobj,
+    public_data_t* public_data);
 /***
  * @brief Actualiza el bloque i de la matriz, a cargo del hilo i
  * @param lamina puntero a la lamina actual
@@ -130,7 +132,7 @@ void* update_lamina_block(void *data);
  * @param row Fila de la celda a actualizar.
  * @param column Columna de la celda a actualizar.
  */
-int update_cell(Lamina *lamina, uint64_t row, uint64_t column);
+size_t update_cell(Lamina *lamina, size_t row, size_t column);
 
 /**
  * @brief Finaliza la simulación y guarda los resultados en archivos.
