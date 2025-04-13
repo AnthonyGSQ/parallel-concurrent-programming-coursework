@@ -252,7 +252,15 @@ int create_lamina(Lamina *lamina, file_struct* fileobj,
     plan_thread_distribution(lamina, public_data);
     return EXIT_SUCCESS;
 }
-
+/***
+ * @brief Funcion a cargo de llenar la matriz con los valores del binario
+ * 
+ * @param lamina Puntero al objeto lamina actual
+ * @param fileobj Puntero al objeto fileobj que contiene todos los datos de los
+ * archivos binarios y tsv's
+ * @return retorna EXIT_FAILURE si nada falla, en caso de no poder leer el
+ * valor del binario, retorna EXIT_FAILURE
+ */
 int fillMatriz(Lamina *lamina, file_struct* fileobj) {
     // Bucle para leer los valores de la matriz
     for (size_t i = 0; i < lamina->rows; i++) {
@@ -271,7 +279,16 @@ int fillMatriz(Lamina *lamina, file_struct* fileobj) {
     print_lamina(lamina);
     return EXIT_SUCCESS;
 }
-
+/***
+ * @brief Funcion que calcula el tamano del bloque que procesara cada hilo
+ * 
+ * En caso de recibir demaciados hilos, los limita, si la lamina recibida
+ * tiene menos de 100 celdas, limita la cantidad de hilos a utilizar a solo uno
+ * , esto debido al overhead ya que no vale la pena crear n hilos para 100
+ * celdas o menos
+ * @param lamina Puntero al objeto lamina actual
+ * @param public_data estructura compartida entre hilos
+ */
 void plan_thread_distribution(Lamina *lamina,
     public_data_t* public_data) {
     double total_cells = lamina->rows * lamina->columns;
@@ -327,6 +344,8 @@ int update_lamina(Lamina * lamina, file_struct *fileobj,
     while (unstable_blocks > 0) {
         estados++;
         unstable_blocks = 0;
+        // quitamos valores basura de next_temperatures para evitar
+        // calculos erroneos
         for (size_t i = 0; i < lamina->rows; i++) {
             for (size_t j = 0; j < lamina->columns; j++) {
                 if (i == 0 || i == lamina->rows - 1 ||
@@ -338,8 +357,8 @@ int update_lamina(Lamina * lamina, file_struct *fileobj,
                 }
             }
         }
-
         size_t thread_count = public_data->thread_count;
+        // creamos n private_datas para los n threads
         private_data_t* private_data = calloc(thread_count,
             sizeof(private_data_t));
         if (!private_data) {
@@ -347,7 +366,7 @@ int update_lamina(Lamina * lamina, file_struct *fileobj,
                 "Error: could not make calloc for private_data");
             return EXIT_FAILURE;
         }
-
+        // creamos los n hilos
         pthread_t* threads = calloc(thread_count, sizeof(pthread_t));
         if (!threads) {
             error_manager(lamina, fileobj,
@@ -355,10 +374,11 @@ int update_lamina(Lamina * lamina, file_struct *fileobj,
             free(private_data);
             return EXIT_FAILURE;
         }
-
+        // bucle para asignarle trabajo a cada hilo
         for (size_t i = 0; i < thread_count; i++) {
             private_data[i].thread_num = i;
             private_data[i].public_data = public_data;
+            // si algo falla liberamos toda la memoria reservada
             if (pthread_create(&threads[i], NULL, update_lamina_block,
                 &private_data[i]) != 0) {
                 error_manager(lamina, fileobj, "Error: pthread_create falló");
@@ -367,14 +387,17 @@ int update_lamina(Lamina * lamina, file_struct *fileobj,
                 return EXIT_FAILURE;
             }
         }
-
+        // ciclo para el threads_join y recopilacion de cuantos bloques
+        // no estables existen aun
         for (size_t i = 0; i < public_data->thread_count; i++) {
             pthread_join(threads[i], NULL);
             unstable_blocks += private_data[i].unstable_cells;
         }
+        // una vez terminado el trabajo de los threads, liberamos la memoria
+        // reservada
         free(threads);
         free(private_data);
-
+        // swap de las matrices
         temp = lamina->temperatures;
         lamina->temperatures = lamina->next_temperatures;
         lamina->next_temperatures = temp;
@@ -394,8 +417,16 @@ int update_lamina(Lamina * lamina, file_struct *fileobj,
     return EXIT_SUCCESS;
 }
 
-// la idea sera que esta funcion sea la de for for de cada hilo
-// los bordes que los lea desde el private data de cada hilo
+/***
+ * @brief Funcion que actualiza el bloque de la matriz correspondiente a cada
+ * hilo
+ * La funcion primeramente calcula los puntos x1, x2, y1, y2 para saber
+ * de donde a donde debe procesar cada hilo la matriz. Cabe resaltar que el
+ * x2, y2 son excluyentes, de manera en que nunca existen dos hilos que
+ * modifiquen la misma celda, evitando condiciones de carrera o similar
+ * 
+ * @param data Aqui se encuentra el puntero al struct privado de cada hilo
+ */
 void* update_lamina_block(void* data) {
     assert(data);
     private_data_t *private_data = (private_data_t*) data;
@@ -412,6 +443,8 @@ void* update_lamina_block(void* data) {
     private_data->y2 = private_data->public_data->lamina->columns;
 
     size_t unstable_cells = 0;
+    // recorrido del bloque correspondiente de cada hilo, que ignora los bordes
+    // pues estos son constantes
     for (size_t i = private_data->x1; i < private_data->x2; i++) {
         for (size_t j = private_data->y1; j < private_data->y2; j++) {
             if (i == 0 || i == private_data->public_data->lamina->rows - 1 ||
@@ -443,16 +476,23 @@ void* update_lamina_block(void* data) {
 void update_cell(Lamina * lamina, size_t row, size_t column,
     size_t *unstable_cells) {
     double diff = 0;
+    // aseguramos que no vamos a procesar un borde
     if (row > 0 && row < lamina->rows - 1 && column > 0 &&
         column < lamina->columns - 1) {
+        // obtenemos los valores de las celdas adyacentes a la actual
         double up = lamina->temperatures[row - 1][column];
         double down = lamina->temperatures[row + 1][column];
         double left = lamina->temperatures[row][column - 1];
         double right = lamina->temperatures[row][column + 1];
         double actual = lamina->temperatures[row][column];
+        // para evitar calculos erroneos, como el estado inicia en 0
+        // le cambiamos temporalmente su valor a uno para no realizar
+        // multiplicaciones con 0 que no alterarian las temperaturas
+        // dando un falso resultado de que ya esta estable la celda
         if (lamina->k == 0) {
             lamina->k = 1;
         }
+        // calculamos la temperatura futura de la celda
         double new_temp = actual +
             ((lamina->k * lamina->conductivity) /
             (lamina->height * lamina->height)) *
