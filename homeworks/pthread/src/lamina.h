@@ -83,13 +83,15 @@ int lamina_constructor(int argc, char *argv[]);
  */
 int reading_parameters(Lamina *lamina, file_struct* fileobj, char* line);
 /**
- * @brief Reserva memoria para las matrices de temperaturas y lee el archivo binario.
- * 
+ * @brief Reserva memoria para las matrices de temperaturas y lee el archivo
+ * binario.
  * @param lamina Estructura Lamina donde se almacenarán los datos.
  * 
- * @return `EXIT_SUCCESS` si la memoria se reserva correctamente, `EXIT_FAILURE` en caso de error.
+ * @return `EXIT_SUCCESS` si la memoria se reserva correctamente,
+ * `EXIT_FAILURE` en caso de error.
  */
-int create_lamina(Lamina *lamina, file_struct* fileobj, public_data_t *public_data);
+int create_lamina(Lamina *lamina, file_struct* fileobj, public_data_t
+    *public_data);
 /***
  * @brief Rellena la matriz con los valores del archivo binario
  * 
@@ -157,7 +159,8 @@ void print_lamina(Lamina *lamina);
  * @param lamina Estructura Lamina que se va a liberar.
  * @param error_message Mensaje de error a mostrar.
  */
-void error_manager(Lamina *lamina, file_struct* fileobj, const char* error_message);
+void error_manager(Lamina *lamina, file_struct* fileobj,
+    const char* error_message);
 
 /**
  * @brief Libera toda la memoria ocupada por la lamina.
@@ -167,7 +170,8 @@ void error_manager(Lamina *lamina, file_struct* fileobj, const char* error_messa
 void delete_lamina(Lamina *lamina, file_struct *fileobj);
 
 /**
- * @brief Convierte el tiempo en segundos a un formato legible (horas/días/meses).
+ * @brief Convierte el tiempo en segundos a un formato legible
+ * (horas/días/meses).
  * 
  * @param seconds Tiempo en segundos.
  * @param text Cadena donde se almacenará el tiempo formateado.

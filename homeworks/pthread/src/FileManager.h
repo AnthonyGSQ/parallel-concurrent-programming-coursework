@@ -33,4 +33,4 @@ typedef struct Lamina Lamina;
 
 int report_file(Lamina *lamina, file_struct *file_obj);
 int delete_files(file_struct *fileobj);
-#endif
+#endif  // HOMEWORKS_PTHREAD_SRC_FILEMANAGER_H_

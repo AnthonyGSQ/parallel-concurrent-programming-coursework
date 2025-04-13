@@ -41,36 +41,47 @@ int lamina_constructor(int argc, char *argv[]) {
     int return_value = 0;
     // En caso de recibir menos parametros a los esperados, retorna EXIT_FAILURE
     if (argc < 2) {
-        error_manager(NULL, NULL, "Invalid entrance: you need to specify a .txt and"
+        error_manager(NULL, NULL,
+            "Invalid entrance: you need to specify a .txt and"
             "the amounth of threads you want to use");
         return EXIT_FAILURE;
     }
+    int64_t temp = 0;
     FILE *file = fopen(argv[1], "r");
-    char *end;
-    size_t thread_count = strtoul(argv[2], &end, 10);
-    if (*end != '\0') {
-        thread_count = sysconf(_SC_NPROCESSORS_CONF);
-        fprintf(stderr, "Warning!: invalid thread_count, taking %zu as"
-            "thread_number\n", thread_count);
+    if (argc == 3) {
+        char *end;
+        temp = strtoul(argv[2], &end, 10);
+        // si el usuario envia nada, negativo o cero, cae en este if
+        if (*end != '\0' || temp <= 0) {
+            temp = sysconf(_SC_NPROCESSORS_CONF);
+            fprintf(stderr,
+                "Warning!: invalid thread_count, taking %" PRId64 " as "
+                "thread_number\n", temp);
+        }
+    } else {
+        temp = sysconf(_SC_NPROCESSORS_CONF);
     }
     if (!file) {
         fprintf(stderr, "Error: could not open %s file", argv[1]);
         return EXIT_FAILURE;
     }
     char line[256] = "";
+    size_t thread_count = (size_t)temp;
     // while para leer todos los reglones del txt
-    printf("THREAD_COUNT: %zu\n", thread_count);
+    printf("THREAD_COUNT: %" PRId64 "\n", thread_count);
     while (fgets(line, sizeof(line), file)) {
         Lamina *lamina = (Lamina *)calloc(1, sizeof(Lamina));
         public_data_t *public_data = calloc(1, sizeof(public_data_t));
         public_data->thread_count = thread_count;
-        file_struct * fileobj = (file_struct*)calloc(1,sizeof(file_struct));
+        file_struct * fileobj = (file_struct*)calloc(1, sizeof(file_struct));
         if (!lamina) {
-            error_manager(lamina, fileobj, "Error: could not allocate memory for"
+            error_manager(lamina, fileobj,
+                "Error: could not allocate memory for"
                 "Lamina");
             return EXIT_FAILURE;
         }
-        snprintf(fileobj->base_route, sizeof(fileobj->base_route), "%s", argv[1]);
+        snprintf(fileobj->base_route, sizeof(fileobj->base_route),
+        "%s", argv[1]);
 
         char *lastSLash = strrchr(fileobj->base_route, '/');
         if (!lastSLash) {
@@ -80,7 +91,8 @@ int lamina_constructor(int argc, char *argv[]) {
         }
         *(lastSLash + 1) = '\0';
         if (strcmp(line, "") == 0) {
-            error_manager(lamina, fileobj, "Error: could not read a line from the .txt"
+            error_manager(lamina, fileobj,
+                "Error: could not read a line from the .txt"
                 "file");
                 return EXIT_FAILURE;
         }
@@ -132,19 +144,18 @@ int reading_parameters(Lamina *lamina, file_struct* fileobj, char* line) {
     if (sscanf(line, "%s %lf %lf %lf %lf", temp, &lamina->time,
         &lamina->conductivity,
           &lamina->height, &lamina->epsilon) != 5) {
-            error_manager(lamina, fileobj, "Error: The file of configuration does not"
+            error_manager(lamina, fileobj,
+                "Error: The file of configuration does not"
                 "have the spected parameters");
                 return EXIT_FAILURE;
     }
-    
     // se agrega la ruta al binario para poder leer el archivo
   snprintf(fileobj->binary_file_name,
       sizeof(fileobj->binary_file_name) + sizeof(temp), "%s%s",
       fileobj->base_route, temp);
-      
     // Ifs que verifican que los valores recibidos del txt sean validos, si no
     // lo son, retornan EXIT_FAILURE
-    printf("TIME: %.f\n", lamina->time);
+    printf("Time: %.f\n", lamina->time);
     if (lamina->time == 0.0) {
         error_manager(lamina, fileobj, "Invalid time");
         return EXIT_FAILURE;
@@ -199,7 +210,8 @@ int create_lamina(Lamina *lamina, file_struct* fileobj,
     // Se lee el segundo bloque de bytes donde se encuentra el numero de
     // columnas
     if (fread(&lamina->columns, sizeof(uint64_t), 1, fileobj->file) != 1) {
-        error_manager(lamina, fileobj, "Error: Failed to read columns from file");
+        error_manager(lamina, fileobj,
+            "Error: Failed to read columns from file");
         return EXIT_FAILURE;
     }
     // Si el numero de columnas es invalido, se retorna EXIT_FAILURE
@@ -212,7 +224,8 @@ int create_lamina(Lamina *lamina, file_struct* fileobj,
     lamina->next_temperatures = (double **)malloc(lamina->rows *
         sizeof(double*));
     if (!lamina->temperatures || !lamina->next_temperatures) {
-        error_manager(lamina, fileobj, "Error: No se pudo reservar memoria para las"
+        error_manager(lamina, fileobj,
+            "Error: No se pudo reservar memoria para las"
             "filas de las matrices.");
             return EXIT_FAILURE;
     }
@@ -226,13 +239,14 @@ int create_lamina(Lamina *lamina, file_struct* fileobj,
 
         // Comprobar si la reserva de memoria falló para alguna fila
         if (!lamina->temperatures[i] || !lamina->next_temperatures[i]) {
-            error_manager(lamina, fileobj, "Error: No se pudo reservar memoria para las"
+            error_manager(lamina, fileobj,
+                "Error: No se pudo reservar memoria para las"
                 "filas de las matrices.");
                 return EXIT_FAILURE;
         }
     }
     return_value = fillMatriz(lamina, fileobj);
-    if(return_value == EXIT_FAILURE) {
+    if (return_value == EXIT_FAILURE) {
         return EXIT_FAILURE;
     }
     plan_thread_distribution(lamina, public_data);
@@ -245,7 +259,8 @@ int fillMatriz(Lamina *lamina, file_struct* fileobj) {
         for (size_t j = 0; j < lamina->columns; j++) {
             if (fread(&lamina->temperatures[i][j], sizeof(double), 1,
             fileobj->file) != 1) {
-                error_manager(lamina, fileobj, "Error: Failed to read temperature values"
+                error_manager(lamina, fileobj,
+                    "Error: Failed to read temperature values"
                     "from file");
                 return EXIT_FAILURE;
             }
@@ -277,7 +292,7 @@ void plan_thread_distribution(Lamina *lamina,
         public_data->thread_count = total_cells;
     }
     size_t cells_per_thread = total_cells / public_data->thread_count;
-    if ( cells_per_thread < 100) {
+    if (cells_per_thread < 100) {
         cells_per_thread = 100;
         public_data->thread_count = total_cells / 100;
     }
@@ -316,7 +331,8 @@ int update_lamina(Lamina * lamina, file_struct *fileobj,
             for (size_t j = 0; j < lamina->columns; j++) {
                 if (i == 0 || i == lamina->rows - 1 ||
                         j == 0 || j == lamina->columns -1) {
-                    lamina->next_temperatures[i][j] = lamina->temperatures[i][j];
+                    lamina->next_temperatures[i][j] =
+                    lamina->temperatures[i][j];
                 } else {
                     lamina->next_temperatures[i][j] = 0;
                 }
@@ -324,15 +340,18 @@ int update_lamina(Lamina * lamina, file_struct *fileobj,
         }
 
         size_t thread_count = public_data->thread_count;
-        private_data_t* private_data = calloc(thread_count, sizeof(private_data_t));
+        private_data_t* private_data = calloc(thread_count,
+            sizeof(private_data_t));
         if (!private_data) {
-            error_manager(lamina, fileobj, "Error: could not make calloc for private_data");
+            error_manager(lamina, fileobj,
+                "Error: could not make calloc for private_data");
             return EXIT_FAILURE;
         }
 
         pthread_t* threads = calloc(thread_count, sizeof(pthread_t));
         if (!threads) {
-            error_manager(lamina, fileobj, "Error: could not make calloc for threads");
+            error_manager(lamina, fileobj,
+                "Error: could not make calloc for threads");
             free(private_data);
             return EXIT_FAILURE;
         }
@@ -340,7 +359,8 @@ int update_lamina(Lamina * lamina, file_struct *fileobj,
         for (size_t i = 0; i < thread_count; i++) {
             private_data[i].thread_num = i;
             private_data[i].public_data = public_data;
-            if (pthread_create(&threads[i], NULL, update_lamina_block, &private_data[i]) != 0) {
+            if (pthread_create(&threads[i], NULL, update_lamina_block,
+                &private_data[i]) != 0) {
                 error_manager(lamina, fileobj, "Error: pthread_create falló");
                 free(threads);
                 free(private_data);
@@ -383,7 +403,8 @@ void* update_lamina_block(void* data) {
 
     // Dividir solo por filas (x), no por columnas
     private_data->x1 = private_data->thread_num * x_increment;
-    private_data->x2 = (private_data->thread_num == private_data->public_data->thread_count - 1)
+    private_data->x2 = (private_data->thread_num ==
+        private_data->public_data->thread_count - 1)
         ? private_data->public_data->lamina->rows
         : (private_data->thread_num + 1) * x_increment;
 
@@ -391,31 +412,14 @@ void* update_lamina_block(void* data) {
     private_data->y2 = private_data->public_data->lamina->columns;
 
     size_t unstable_cells = 0;
-    /*
-    assert(data);
-    private_data_t *private_data = (private_data_t*) data;
-    size_t x_increment = private_data->public_data->x_increment;
-    size_t y_increment = private_data->public_data->y_increment;
-
-    private_data->x1 = private_data->thread_num * x_increment;
-    private_data->y1 = private_data->thread_num * y_increment;
-
-    if (private_data->thread_num == private_data->public_data->thread_count - 1) {
-        private_data->x2 = private_data->public_data->lamina->rows;
-        private_data->y2 = private_data->public_data->lamina->columns;
-    } else {
-        private_data->x2 = (private_data->thread_num + 1) * x_increment;
-        private_data->y2 = (private_data->thread_num + 1) * y_increment;
-    }
-    size_t unstable_cells = 0;
-    */
     for (size_t i = private_data->x1; i < private_data->x2; i++) {
         for (size_t j = private_data->y1; j < private_data->y2; j++) {
             if (i == 0 || i == private_data->public_data->lamina->rows - 1 ||
                 j == 0 || j == private_data->public_data->lamina->columns - 1) {
                 continue;
             }
-            update_cell(private_data->public_data->lamina, i, j, &unstable_cells);
+            update_cell(private_data->public_data->lamina, i, j,
+                &unstable_cells);
         }
     }
     private_data->unstable_cells = unstable_cells;
@@ -441,7 +445,6 @@ void update_cell(Lamina * lamina, size_t row, size_t column,
     double diff = 0;
     if (row > 0 && row < lamina->rows - 1 && column > 0 &&
         column < lamina->columns - 1) {
-
         double up = lamina->temperatures[row - 1][column];
         double down = lamina->temperatures[row + 1][column];
         double left = lamina->temperatures[row][column - 1];
@@ -502,7 +505,8 @@ void print_lamina(Lamina* lamina) {
  * @param error_message Un mensaje de error que se imprime en la salida de
  * error estándar.
  */
-void error_manager(Lamina *lamina, file_struct *fileobj, const char* error_message) {
+void error_manager(Lamina *lamina, file_struct *fileobj,
+    const char*error_message) {
     fprintf(stderr, "%s\n", error_message);
     if (lamina) {
         delete_lamina(lamina, fileobj);
