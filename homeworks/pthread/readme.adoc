@@ -31,6 +31,22 @@ La diferencia a comparar con epsilon de cada celda será la resta del valor en e
 
 #Si el valor más grande de toda la lámina es menor a epsilon, el programa finalizará.#
 
+=== Uso de Pthreads para la solucion
+
+Para aprovechar al maximo el rendimiento del uso de threads en el recorrido de la matriz, hay que tomar en cuenta el overhead, no es rentable utilizar m threads para una matriz con n celdas si m > n/2, ya que el crear hilos tiene su coste computacional.
+
+En consecuencia, se toma como parametro de celdas minimas a procesar por hilo, el valor 100, es decir si se recibe una lamina con menos de 100 celdas, no se considera la idea de crear hilos pues afectaria el rendimiento mas que mejorarlo. Caso contrario si se recibe una matriz de mas de 100 celdas, se considera el caso de utilizar hilos, eso si, limitando la cantidad de hilos en caso de que esta sea demaciado grande para la lamina a procesar, ejemplo:
+
+- Una matriz 20x10 (200 celdas) y una solicitud del usuario de usar 1000 hilos
+- Debido a la cantidad ridicula de hilos solicitados para una matriz tan pequena, se limitarian los hilos a dos.
+
+Con respecto a la division de celdas para la matriz es simple, se divide la cantidad de filas entre los hilos de la manera mas equitativa posible, en caso de no ser una division exacta, las filas no asignadas las procesara el ultimo hilo. Por ejemplo:
+
+- Lamina 21x10 (200 celdas), solicitud de 2 hilos.
+
+Serian veintiun filas divididas entre dos hilos, es decir 10 filas cada hilo, sobrando la fila veintiuno, al ser una fila sobrante, sera procesada por el ultimo hilo.
+En este caso el hilo uno procesaria las filas desde la primera hasta la fila nueve y el segundo hilo procesaria desde la fila diez hasta la fila veintiuno para dar un total de 21 filas procesadas.
+
 [[manual]]
 
 == Manual del usuario
@@ -61,6 +77,14 @@ Donde ### es el número del job a utilizar en el programa. Ejemplo:
 ----
 ./jobs/job001b/job002.txt
 ----
+
+En caso de querer probar el programa inmediatamente, puedes utilizar el siguiente comando:
+[source, bash]
+---
+make clean run
+---
+
+Esto correra el programa tomando como archivo el job002b/job002.txt para procesar.
 
 [[creditos]]
 == Creditos
