@@ -58,6 +58,13 @@ synchronization but without the constraint of a fixed size.
 
 == Tasks
 
+[#autowidth]
+|===
+|# |Id |Type |Description
+|1 |link:homeworks/serial[serial] | Tarea01 | Program that stabilizes the temperatures of an n x m sheet, processing one cell of the sheet at a time
+|2 |link:homeworks/pthread[pthread] | Tarea02 | Program that stabilizes the temperatures of an n x m sheet, processing multiple cells of the sheet at the same time.
+|===
+
 == Glosary
 
 === Programacion serial
@@ -95,16 +102,40 @@ El indeterminismo es cuando no se sabe que hilo terminara su trabajo primero, po
 
 
 === Memoria privada y compartida
+
+La memoria privada se refiere a las variables, datos, structs que solamente un hilo tiene acceso a ellos. Por otra parte la memoria compartida es aquella a la cual varios hilos tienen acceso.
+
 === Espera activa
+
+Se refiere a cuando los hilos estan esperando a que se cumpla x condicion para poder realizar la tarea que se les ha asignado, sin embargo mientras esperan consumen recursos de la CPU, ralentizandola gravemente, es la peor practica de programacion que se puede realizar.
+
 === Condicion de carrera
+
+La condicion de carrera es cuando n hilos realizan x procedimientos a partir de datos que estan siendo leidos y editados de manera concurrente, generando un indeterminismo de resultados no deseados.
+
 === Control de concurrencia
+
+Es un metodo que evita la espera activa de hilos, haciendo que estos en lugar de esperar consumiendo recursos, esperen sin dicho consumo, se podria decir que los hilos se "duermen".
+
 === Seguridad condicional
+
+Es un metodo de control de concurrencia que hace "esperar" a n hilos hasta que se cumpla una determinada condicion.
+
 === Exclusion mutua
+
+Herramienta de control de concurrencia que evita que mas de un hilo acceda a x dato, evitando posibles condiciones de carrera.
+
 === Semaforo
+
+Herramienta de control de concurrencia que le permite a n hilos poder realizar x actividad a la vez, enviando un signal cada que el semaforo vacia uno de los espacios que tiene disponibles, permmitiendole a otros hilos acceder a x actividad.
+
 === Barrera
 === Variable de condicion
 === Candado de lectura y escritura
 === Descomposicion
+
+Se refiere a la separacion de un trabajo en multiples tareas, facilitando el uso de concurrencia.
+
 === Mapeo
 === Incremento de velocidad
 === Eficiencia
