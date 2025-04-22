@@ -34,7 +34,6 @@ class ProducerConsumerTest {
   int consumerDelay = 0;
   /// Probability of loss of packages
   double packetLossProbability = 0.0;
-
  private:
   /// Producer of the simulated network messages
   ProducerTest* producer = nullptr;
@@ -42,7 +41,7 @@ class ProducerConsumerTest {
   DispatcherTest* dispatcher = nullptr;
   /// Consumers of the simulated network messages
   std::vector<ConsumerTest*> consumers;
-  /// Assembler that can lose network packages
+  /// Asembler that can lose network packages
   AssemblerTest* assembler = nullptr;
 
  public:
@@ -57,7 +56,7 @@ class ProducerConsumerTest {
   /// Analyze the command line arguments
   int analyzeArguments(int argc, char* argv[]);
   /// Create network threads: producers, consumers, assemblers and dispatchers
-  void createThreadObjects();
+  void createThreadsObjects();
   /// Intercommunicate threads using queues
   void connectQueues();
   /// Start the execution of threads

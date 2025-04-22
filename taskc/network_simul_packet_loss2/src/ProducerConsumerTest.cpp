@@ -35,7 +35,7 @@ int ProducerConsumerTest::start(int argc, char* argv[]) {
     return error;
   }
   // Create objects for the simulation
-  this->createThreadObjects();
+  this->createThreadsObjects();
   // Communicate simulation objects
   this->connectQueues();
   // Start the simulation
@@ -47,7 +47,7 @@ int ProducerConsumerTest::start(int argc, char* argv[]) {
 }
 
 int ProducerConsumerTest::analyzeArguments(int argc, char* argv[]) {
-  // 6 + 1 arguments are mandatory
+  // 5 + 1 arguments are mandatory
   if (argc != 7) {
     std::cout << usage;
     return EXIT_FAILURE;
@@ -63,7 +63,7 @@ int ProducerConsumerTest::analyzeArguments(int argc, char* argv[]) {
   return EXIT_SUCCESS;
 }
 
-void ProducerConsumerTest::createThreadObjects() {
+void ProducerConsumerTest::createThreadsObjects() {
   this->producer = new ProducerTest(this->packageCount, this->productorDelay
     , this->consumerCount + 1);
   this->dispatcher = new DispatcherTest(this->dispatcherDelay);
@@ -88,8 +88,8 @@ void ProducerConsumerTest::connectQueues() {
     this->dispatcher->registerRedirect(index + 1
       , this->consumers[index]->getConsumingQueue());
   }
-  this->dispatcher->registerRedirect(this->consumerCount + 1
-    , this->assembler->getConsumingQueue());
+  this->dispatcher->registerRedirect(this->consumerCount + 1,
+    this->assembler->getConsumingQueue());
   this->assembler->setProducingQueue(this->dispatcher->getConsumingQueue());
 }
 
