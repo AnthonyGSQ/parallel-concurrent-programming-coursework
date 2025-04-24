@@ -5,3 +5,5 @@ doc/
 .DS_Store
 .vscode
 jobs/job020-input/
+tsv/
+callgrind.out.*

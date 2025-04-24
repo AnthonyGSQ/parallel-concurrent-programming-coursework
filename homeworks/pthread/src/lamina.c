@@ -160,7 +160,7 @@ int reading_parameters(Lamina *lamina, file_struct* fileobj, char* line) {
         error_manager(lamina, fileobj, "Invalid time");
         return EXIT_FAILURE;
     }
-    printf("Conductivity: %.f\n", lamina->conductivity);
+    printf("Conductivity: %.3f\n", lamina->conductivity);
     if (lamina->conductivity <= 0.0) {
         error_manager(lamina, fileobj, "Invalid conductivity");
         return EXIT_FAILURE;
@@ -340,7 +340,6 @@ int update_lamina(Lamina * lamina, file_struct *fileobj,
     size_t unstable_blocks = 1;
     int estados = 0;
     double** temp = NULL;
-
     while (unstable_blocks > 0) {
         estados++;
         unstable_blocks = 0;
@@ -401,11 +400,11 @@ int update_lamina(Lamina * lamina, file_struct *fileobj,
         temp = lamina->temperatures;
         lamina->temperatures = lamina->next_temperatures;
         lamina->next_temperatures = temp;
-
-        lamina->k += lamina->time;
-        printf("Estado: %d\n", estados);
+        //lamina->k += lamina->time;
     }
+    printf("Estado: %d\n", estados);
     lamina->k = estados;
+    lamina->time *= lamina->k;
     printf("Lamina estabilizada: \n");
     print_lamina(lamina);
 
@@ -493,6 +492,7 @@ void update_cell(Lamina * lamina, size_t row, size_t column,
             lamina->k = 1;
         }
         // calculamos la temperatura futura de la celda
+        // TODOASD: lamina->k cambiarlo por lamina->time para mas eficiencia
         double new_temp = actual +
             ((lamina->k * lamina->conductivity) /
             (lamina->height * lamina->height)) *

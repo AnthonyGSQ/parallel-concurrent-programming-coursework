@@ -37,6 +37,7 @@ int report_file(Lamina *lamina, file_struct *fileobj) {
     fileobj->base_route, lastSLash, ".tsv");
     snprintf(temp, sizeof(temp), "%s%s%s%s", fileobj->base_route,
     "tsv/", lastSLash, ".tsv");
+    printf("HOLA: %s\n", lastSLash);
     // si no se encuentra la carpeta tsv, crea el archivo tsv en la misma
     // carpeta donde se encuentra el binario leido
     fileobj->report_file = fopen(temp, "w+");
@@ -45,10 +46,12 @@ int report_file(Lamina *lamina, file_struct *fileobj) {
         printf("Creating new tsv file\n");
         fileobj->report_file = fopen(alternative_route, "w+");
     }
-    snprintf(text, sizeof(temp), "%s\t%.lf \t%g\t%g\t%g\t%g\t", temp,
-    lamina->time, lamina->conductivity, lamina->height,
+    double time = lamina->time / lamina->k;
+    snprintf(text, sizeof(fileobj->binary_file_name),
+    "%s.bin\t%.lf \t%g\t%g\t%g\t%g\t", lastSLash,
+    time, lamina->conductivity, lamina->height,
     lamina->epsilon, lamina->k);
-    format_time(lamina->k, text, sizeof(text));
+    format_time(lamina->time, text, sizeof(text));
     fprintf(fileobj->report_file, "%s", text);
     return EXIT_SUCCESS;
 }
