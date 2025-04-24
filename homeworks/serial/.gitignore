@@ -4,3 +4,6 @@ doc/
 *.pyc
 .DS_Store
 .vscode
+jobs/job020-input/
+jobs/job001b/tsv/
+callgrind.out.*

@@ -257,11 +257,13 @@ int update_lamina(Lamina * lamina, shared_file_data *fileobj) {
     // variable donde se guarda la diferencia de la celda actual con su futuro
     // estado para compararla con el epsilon y saber si dicha celda esta estable
     double diff = 0;
+    double estados;
     // variable para contar cuantas celdas no estan estables, con solo una no
     // estable, el while se vuelve a ejecutar
     size_t unstable_cells = 1;
     double** temp = NULL;
     while (unstable_cells > 0) {
+        estados++;
         // El valor de unstable_cells se resetea despues de procesar una vez
         // la lamina entera, asi aseguramos que el bucle no termine hasta
         // no encontrar ni una sola celda inestable
@@ -271,10 +273,12 @@ int update_lamina(Lamina * lamina, shared_file_data *fileobj) {
         for (size_t i = 0; i < lamina->rows; i++) {
             for (size_t j = 0; j < lamina->columns; j++) {
                 if (i == 0 || i == lamina->rows - 1 ||
-                        j == 0 || j == lamina->columns -1) {
-                    continue;
-                }
+                    j == 0 || j == lamina->columns -1) {
+                lamina->next_temperatures[i][j] =
+                lamina->temperatures[i][j];
+            } else {
                 lamina->next_temperatures[i][j] = 0;
+            }
             }
         }
 
@@ -301,9 +305,10 @@ int update_lamina(Lamina * lamina, shared_file_data *fileobj) {
         temp = lamina->temperatures;
         lamina->temperatures = lamina->next_temperatures;
         lamina->next_temperatures = temp;
-        lamina->k += lamina->time;
     }
     printf("Lamina estabilizada: \n");
+    lamina->k = estados;
+    lamina->time *= lamina->k;
     print_lamina(lamina);
     return_value = finish_simulation(lamina, fileobj);
     if (return_value == EXIT_FAILURE) {
@@ -336,7 +341,7 @@ void update_cell(Lamina * lamina, uint64_t row, uint64_t column) {
         // formula para actualizar la temperatura de la celda
         lamina->next_temperatures[row][column] =
         lamina->temperatures[row][column] +
-        ((lamina->k * lamina->conductivity) /
+        ((lamina->time * lamina->conductivity) /
         (lamina->height * lamina->height)) *
         (up + down + right + left - (4 * lamina->temperatures[row][column]));
     }
@@ -397,9 +402,10 @@ int report_file(Lamina *lamina, shared_file_data *fileobj) {
         printf("Creating new tsv file\n");
         fileobj->report_file = fopen(alternative_route, "w+");
     }
-    snprintf(text, sizeof(temp), "%s\t%" PRIu64 "\t%g\t%g\t%g\t", temp,
-    lamina->time, lamina->conductivity, lamina->height, lamina->epsilon);
-    format_time(lamina->k, text, sizeof(text));
+    double time = lamina->time / lamina->k;
+    snprintf(text, sizeof(temp), "%s.bin\t%g\t%g\t%g\t%g\t", lastSLash,
+    time, lamina->conductivity, lamina->height, lamina->epsilon);
+    format_time(lamina->time, text, sizeof(text));
     fprintf(fileobj->report_file, "%s", text);
     return EXIT_SUCCESS;
 }
