@@ -6,24 +6,6 @@
 #include <stdint.h>
 #include <string.h>
 
-/**
- * @brief Genera y guarda un archivo de reporte en formato TSV con la
- * información de la simulación de la lámina.
- *
- * Esta función crea o abre un archivo TSV donde se almacenan los datos de la
- * simulación, vease el nombre del binario, tiempo transcurrido, epsilon,
- * height y conductivity Si no se puede abrir el archivo, se crea uno nuevo en
- * una ruta alternativa (dentro de la carpeta job###).
- * Además, se formatea el tiempo en formato legible para una persona
- * 
- * @param lamina Un puntero a la estructura lamina
- *
- * @return EXIT_SUCCESS Si el reporte fue exitoso, EXIT_FAILURE si no
- *
- * @note Esta función intenta abrir un archivo en la ruta proporcionada por la
- * estructura `Lamina`. Si no se puede abrir, intentará crear un archivo en una
- * ruta alternativa.
- */
 int report_file(Lamina *lamina, file_struct *fileobj) {
     char text[260] = "";
     char temp[260] = "";
