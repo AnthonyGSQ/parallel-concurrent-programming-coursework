@@ -5,6 +5,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+/**
+ * @brief Punto de entrada del programa.
+ *
+ * Mide el tiempo de ejecución de la función principal `lamina_constructor`, 
+ * la cual simula el proceso térmico en una lámina.
+ *
+ * @param argc Número de argumentos pasados por línea de comandos.
+ * @param argv Direccion del archivo txt a leer para ser procesado
+ * @return 0 en caso de éxito.
+ */
 
 int main(int argc, char *argv[]) {
     struct timespec start_time;
