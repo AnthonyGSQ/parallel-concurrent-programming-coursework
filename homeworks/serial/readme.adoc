@@ -1,4 +1,5 @@
 = Tarea01 serial
+:toc-title: Tabla de contenidos
 :experimental:
 :nofooter:
 :source-highlighter: pygments
@@ -35,8 +36,6 @@ La diferencia a comparar con epsilon de cada celda será la resta del valor en e
 
 == Manual del usuario
 
-=== Build
-
 1. Instalar dependencias:
 - Asegúrate de tener instalados todos los paquetes necesarios:
 
@@ -61,6 +60,29 @@ Donde ### es el número del job a utilizar en el programa. Ejemplo:
 ----
 ./jobs/job001b/job002.txt
 ----
+
+== Ejemplo de entrada y salida
+
+=== Input
+Cada archivo txt cuenta con varias placas para ser procesadas, en este readme se agrega solo dos de dichas placas.
+
+[source, bash]
+./bin/serial ./jobs/job002b/job002.txt
+
+Laminas leidas:
+
+[source, bash]
+plate001.bin	1	50	1000	1e-14	129570	0000/00/01	11:59:30
+plate002.bin	1	25	1000	1e-14	250939	0000/00/02	21:42:19
+
+=== Salida
+La salida es escrita en un archivo tsv cuyo contenido para la primera lamina es:
+[source, bash]
+plate001.bin	1	50	1000	1e-14	0000/00/01	11:59:30
+
+Contenido del archivo tsv de la segunda lamina:
+[source,bash]
+plate002.bin	1	25	1000	1e-14	0000/00/02	21:42:19
 
 [[creditos]]
 == Creditos

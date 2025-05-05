@@ -60,49 +60,49 @@ int lamina_constructor(int argc, char *argv[]);
  * 
  * Esta función lee los parámetros del txt
  * @param lamina Puntero a la estructura Lamina
+ * @param fileobj Puntero al struct encargado del manejo de archivos
  * @param filename Nombre del archivo de entrada.
  * @param line Línea leída desde el txt que contiene los parametros
  * 
  * @return `EXIT_SUCCESS` si los parámetros son válidos, `EXIT_FAILURE` si hay
  * un error.
  */
-int reading_parameters(Lamina *lamina, shared_file_data* fileobj, char* filename, char* line);
+int reading_parameters(Lamina *lamina, shared_file_data* fileobj,
+    char* filename, char* line);
 /**
- * @brief Reserva memoria para las matrices de temperaturas y lee el archivo binario.
+ * @brief Reserva memoria para las matrices de temperaturas y lee el archivo
+ * binario.
  * 
  * @param lamina Estructura Lamina donde se almacenarán los datos.
+ * @param fileobj Puntero al struct encargado del manejo de archivos
  * 
- * @return `EXIT_SUCCESS` si la memoria se reserva correctamente, `EXIT_FAILURE` en caso de error.
+ * @return `EXIT_SUCCESS` si la memoria se reserva correctamente, `EXIT_FAILURE`
+ * en caso de error.
  */
 int create_lamina(Lamina *lamina, shared_file_data* fileobj);
-/***
+/**
  * @brief Rellena la matriz con los valores del archivo binario
  * 
  * @param lamina Estructura lamina con los datos de la simulacion
+ * @param fileobj Puntero a la estructura encargada del manejo de archivos
  * 
  * @return EXIT_SUCCESS en caso de poder rellenar toda la matriz con los valores
  *  del binario, EXIT_FAILURE en caso contrario
  */
 int fillMatriz(Lamina * lamina, shared_file_data* fileobj);
 /**
- * @brief Genera un reporte con los datos de la lamina en formato `.tsv`.
- * 
- * @param lamina Estructura Lamina con los datos a reportar.
- * 
- * @return `EXIT_SUCCESS` si el reporte se genera correctamente, `EXIT_FAILURE` en caso de error.
- */
-
-/**
  * @brief Actualiza la lamina del estado k al estado k+1.
  * 
  * @param lamina Estructura Lamina que contiene las matrices de temperaturas.
+ * @param fileobj Puntero al struct encargado del manejo de archivos
  * 
  * @return `EXIT_SUCCESS` si la actualización es exitosa.
  */
 int update_lamina(Lamina *lamina, shared_file_data *fileobj);
 
 /**
- * @brief Actualiza una celda específica en la lamina usando la fórmula de difusión de calor.
+ * @brief Actualiza una celda específica en la lamina usando la fórmula de
+ * difusión de calor.
  * 
  * @param lamina Estructura Lamina con las temperaturas actuales.
  * @param row Fila de la celda a actualizar.
@@ -114,6 +114,7 @@ void update_cell(Lamina *lamina, uint64_t row, uint64_t column);
  * @brief Finaliza la simulación y guarda los resultados en archivos.
  * 
  * @param lamina Estructura Lamina con los datos finales.
+ * @param fileobj Puntero a la estructura encargada del manejo de archivos
  * 
  * @return `EXIT_SUCCESS` si la simulación se completa exitosamente.
  */
@@ -130,19 +131,23 @@ void print_lamina(Lamina *lamina);
  * @brief Muestra un mensaje de error y libera la memoria de la lamina.
  * 
  * @param lamina Estructura Lamina que se va a liberar.
+ * @param fileobj Puntero al struct de lamina que se va a liberar
  * @param error_message Mensaje de error a mostrar.
  */
-void error_manager(Lamina *lamina, shared_file_data* fileobj, const char* error_message);
+void error_manager(Lamina *lamina, shared_file_data* fileobj,
+    const char*error_message);
 
 /**
  * @brief Libera toda la memoria ocupada por la lamina.
  * 
  * @param lamina Estructura Lamina cuya memoria se va a liberar.
+ * @param fileobj Puntero al struct encargado del manejo de archivos.
  */
 void delete_lamina(Lamina *lamina, shared_file_data *fileobj);
 
 /**
- * @brief Convierte el tiempo en segundos a un formato legible (horas/días/meses).
+ * @brief Convierte el tiempo en segundos a un formato legible
+ * (horas/días/meses).
  * 
  * @param seconds Tiempo en segundos.
  * @param text Cadena donde se almacenará el tiempo formateado.

@@ -30,7 +30,23 @@ typedef struct {
     FILE* report_file;
 } shared_file_data;
 typedef struct Lamina Lamina;
+/**
+ * @brief Genera un reporte con los datos de la lamina en formato `.tsv`.
+ * 
+ * @param lamina Estructura Lamina con los datos a reportar.
+ * @param file_obj Puntero a la estructura encargada del manejo de archivos
+ * 
+ * @return `EXIT_SUCCESS` si el reporte se genera correctamente, `EXIT_FAILURE`
+ * en caso de error.
+ */
 
 int report_file(Lamina *lamina, shared_file_data *file_obj);
+/**
+ * @brief Libera toda la memoria reservada para los archivos utilizados
+ * 
+ * @param fileobj Puntero al struct encargado del manejo de archivos
+ * 
+ * @return 'EXIT SUCCESS' despues de haber liberado toda la memoria
+ */
 int delete_files(shared_file_data *fileobj);
 #endif
