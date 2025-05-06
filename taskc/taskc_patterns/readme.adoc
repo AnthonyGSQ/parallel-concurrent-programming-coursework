@@ -44,12 +44,17 @@ include::for_count.pseudo[]
 +
 ****
 *Respuesta*: 
+10 000 cuando los hilos corren de manera serial
 ****
 
 . ¿Cuál es el menor valor que la variable compartida `count` podría llegar a obtener? ¿En qué rutas de ejecución se alcanza este valor?
 +
 ****
-*Respuesta*: 
+*Respuesta*:
+a. 100 cuando la lectura e incremento del valor es realizado al mismo 
+tiempo
+b. 100 cuando un hilo pierde la CPU, reseteando la variable para luego ejecutar el for aumentando la variable a 100.
+
 ****
 
 
@@ -90,7 +95,8 @@ include::signalingw.pseudo[]
 ----
 
 Una solución a este problema se había hecho antes en el curso ¿recuerda en cuál ejemplo? +
-*Respuesta*: 
+*Respuesta*:
+
 
 
 

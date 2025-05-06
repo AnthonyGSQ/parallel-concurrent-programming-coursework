@@ -1,6 +1,7 @@
 procedure main()
   shared count := 0
   create_threads(100, secondary)
+  join_threads()
 end procedure
 
 procedure secondary()

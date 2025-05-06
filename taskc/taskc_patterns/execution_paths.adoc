@@ -1,7 +1,23 @@
-Ruta 1:
+Ruta 1: Imprime 5 y queda 7 en x
 
 ----
-instr 1
-instr 2
-instr ...
+x := 5
+print(5)
+x := 7
+----
+
+Ruta 2: Imprime 5 y queda 5 en x
+
+----
+x := 7
+x := 5
+print(5)
+----
+
+Ruta 3: Imprime 7 y queda 7 en x
+
+----
+x := 5
+x := 7
+print(7)
 ----
