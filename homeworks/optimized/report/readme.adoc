@@ -1,0 +1,94 @@
+= Reporte de optimizaciones
+:toc-title: Tabla de contenidos
+:experimental:
+:nofooter:
+:source-highlighter: pygments
+:sectnums:
+:stem: latexmath
+:toc:
+:xrefstyle: short
+
+
+
+[[serial_optimizations]]
+== Optimizaciones seriales
+
+IMPORTANTE: medidas temporales tomadas de job003, solo para ver si existe una mejoria de rendimiento o no
+[%autowidth.stretch,options="header"]
+|===
+|Iter. |Etiqueta |Duración (s) |_Speedup_ |Descripción corta
+|0 |Serial0 |139.642 |1.00 |Versión serial inicial (Tarea01)
+|1 |Serial1 |126.431 |1.105 |
+|2 | | | |
+|===
+
+
+[[serial_iter00]]
+=== Versión serial original (Tarea01)
+
+#Describa aquí qué aspectos tenía la versión serial no eficientes que podrían o fueron opitimizados luego. También aspectos que usted considera eficientes, los cuales explicarían por qué no amerita una optimización.#
+
+
+[[serial_iter01]]
+=== Iteración 1
+Para la primera iteracion se busco optimizar los bucles for que se procesaban en cada actualizacion de la lamina, mas especificamente la eliminacion de un for totalmente innecesario, que resetea las temperaturas futuras a 0, sin embargo esa logica se paso a otro bucle for que tambien recorre toda la matriz, aqui el for eliminado:
+
+[source,cpp]
+----
+for (size_t i = 0; i < lamina->rows; i++) {
+    for (size_t j = 0; j < lamina->columns; j++) {
+        if (i == 0 || i == lamina->rows - 1 ||
+            j == 0 || j == lamina->columns - 1) {
+            continue;
+        }
+        lamina->next_temperatures[i][j] = 0;
+    }
+}
+----
+
+Esto da como resultado que en cada estado de la lamina, en lugar de recorrerla entera 2 veces por estado, la recorre una sola vez, mejorando la eficiencia.
+
+[[serial_iter02]]
+=== Iteración 2
+
+
+
+#Para cada iteración del ciclo de optimización, cree una subsección como esta. Resuma en máximo un párrafo en qué consiste la optimización. Su objetivo es que quien lea este documento entienda claramente qué se intentó mejorar. Provea trocitos de código fuente o pseudocódigo que ayude a entender la optimización potencial. Indique si el intento logró incrementar el desempeño. En caso de no lograrlo, conjeture la causa. Eso ayudaría a ahorrar tiempo a otras personas que tengan la misma inquietud.#
+
+
+[[concurrent_optimizations]]
+== Optimizaciones concurrentes
+
+[%autowidth.stretch,options="header"]
+|===
+|Iter. |Etiqueta |Duración (s) |_Speedup_ |Eficiencia |Descripción corta
+|- |SerialI | |1.00 |1.00 |Versión serial final
+|1 |Conc0 | | | |Versión concurrente inicial (Tarea02)
+|2 | | | | |
+|3 | | | | |Versión concurrente final
+|===
+
+
+[[conc_iter00]]
+=== Versión concurrente inicial (Tarea02)
+
+#Describa aquí qué aspectos tenía la versión concurrente (Tarea02) no eficientes que podrían o fueron opitimizados luego. También aspectos que usted considera eficientes, los cuales explicarían por qué no amerita una optimización.#
+
+[[conc_iter01]]
+=== Iteración 1
+
+#Para cada iteración del ciclo de optimización, cree una subsección como esta. Resuma en máximo un párrafo en qué consiste la optimización. Su objetivo es que quien lea este documento entienda claramente qué se intentó mejorar. Provea trocitos de código fuente o pseudocódigo que ayude a entender la optimización potencial. Indique si el intento logró incrementar el desempeño. En caso de no lograrlo, conjeture la causa. Eso ayudaría a ahorrar tiempo a otras personas que tengan la misma inquietud.#
+
+=== Iteración 2
+
+[[optimization_comparison]]
+=== Comparación de optimizaciones
+
+(pendiente)
+
+
+[[concurrency_comparison]]
+=== Comparación del grado de concurrencia
+
+(pendiente)
+

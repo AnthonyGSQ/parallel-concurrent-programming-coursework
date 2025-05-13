@@ -205,29 +205,18 @@ int update_lamina(Lamina * lamina, shared_file_data *fileobj) {
     size_t unstable_cells = 1;
     double** temp = NULL;
     while (unstable_cells > 0) {
-        // El valor de unstable_cells se resetea despues de procesar una vez
-        // la lamina entera, asi aseguramos que el bucle no termine hasta
-        // no encontrar ni una sola celda inestable
         unstable_cells = 0;
-        // Para evitar calculos incorrectos, se resetea la
-        //  matriz next_temperatures
-        for (size_t i = 0; i < lamina->rows; i++) {
-            for (size_t j = 0; j < lamina->columns; j++) {
-                if (i == 0 || i == lamina->rows - 1 ||
-                        j == 0 || j == lamina->columns -1) {
-                    continue;
-                }
-                lamina->next_temperatures[i][j] = 0;
-            }
-        }
 
         for (size_t i = 0; i < lamina->rows; i++) {
             for (size_t j = 0; j < lamina->columns; j++) {
                 // if para ignorar los bordes de la matriz
                 if (i == 0 || i == lamina->rows - 1 ||
                       j == 0 || j == lamina->columns -1) {
+                        lamina->next_temperatures[i][j] =
+                     lamina->temperatures[i][j];
                         continue;
                 }
+                lamina->next_temperatures[i][j] = 0;
                 update_cell(lamina, i, j);
                 diff = fabs(lamina->next_temperatures[i][j] -
                     lamina->temperatures[i][j]);
@@ -265,7 +254,7 @@ void update_cell(Lamina * lamina, uint64_t row, uint64_t column) {
         // formula para actualizar la temperatura de la celda
         lamina->next_temperatures[row][column] =
         lamina->temperatures[row][column] +
-        ((lamina->k * lamina->conductivity) /
+        ((lamina->time * lamina->conductivity) /
         (lamina->height * lamina->height)) *
         (up + down + right + left - (4 * lamina->temperatures[row][column]));
     }
