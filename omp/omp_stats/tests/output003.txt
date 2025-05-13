@@ -1,0 +1,6 @@
+Count  : 2
+Minimum: 4
+Maximum: 4
+Average: 4
+Std.Dev: 0
+Median : 4

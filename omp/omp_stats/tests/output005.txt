@@ -1,0 +1,6 @@
+Count  : 3
+Minimum: -3
+Maximum: 5
+Average: 1.33333
+Std.Dev: 4.04145
+Median : 2
