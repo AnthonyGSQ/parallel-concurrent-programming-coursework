@@ -140,7 +140,8 @@ int create_lamina(Lamina *lamina, shared_file_data* fileobj) {
         error_manager(lamina, fileobj, "Error: Invalid number of columns");
         return EXIT_FAILURE;
     }
-    // Reservamos memoria para las filas de las dos matrices de la lamina
+    // Reservamos memoria para el array que contiene todas las temperaturas
+    // tanto las actuales como futuras.
     lamina->temperatures = malloc(sizeof(double) * 2 * lamina->rows *
     lamina->columns);
     if (!lamina->temperatures) {
@@ -159,6 +160,7 @@ int fillMatriz(Lamina *lamina, shared_file_data* fileobj) {
     int return_value = 0;
     for (size_t i = 0; i < lamina->rows; i++) {
         for (size_t j = 0; j < lamina->columns; j++) {
+            // calculamos el indice 
             size_t index = i * lamina->columns + j;
             if (fread(&lamina->temperatures[index], sizeof(double), 1,
             fileobj->file) != 1) {
@@ -197,6 +199,8 @@ int update_lamina(Lamina * lamina, shared_file_data *fileobj) {
         for (size_t i = 0; i < lamina->rows; i++) {
             for (size_t j = 0; j < lamina->columns; j++) {
                 size_t index = i * lamina->columns + j;
+                // current y next hacen swap en cada iteracion para que las temp
+                // futuras pasen a ser las actuales en cada iteracion.
                 size_t current_index = current_offset + index;
                 size_t next_index = next_offset + index;
 
@@ -216,9 +220,6 @@ int update_lamina(Lamina * lamina, shared_file_data *fileobj) {
                 }
             }
         }
-
-        // SWAP: intercambiamos los offsets para que la siguiente iteración
-        // el "next" sea el actual y el "actual" sea el siguiente
         size_t temp = current_offset;
         current_offset = next_offset;
         next_offset = temp;

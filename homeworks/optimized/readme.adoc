@@ -1,4 +1,5 @@
-= Tarea01 serial
+= Reporte de optimizaciones
+:toc-title: Tabla de contenidos
 :experimental:
 :nofooter:
 :source-highlighter: pygments

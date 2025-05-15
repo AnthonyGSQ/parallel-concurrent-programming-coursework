@@ -15,30 +15,12 @@
  * @date 2025-03-29
  */
 
-/**
- * @brief Constructor de la lamina, se asegura de procesar cada plate del txt
- * 
- * Lee un archivo de texto especificado en los argumentos de la línea de
- * comandos,procesa cada línea y crea una estructura Lamina con los datos
- * obtenidos.
- * 
- * @param argc Número de argumentos de la línea de comandos.
- * @param argv aqui se recibe la ruta del archivo txt a leer
- * 
- * @return EXIT_SUCCESS si la operación fue exitosa, EXIT_FAILURE en caso de 
- *error.
- * 
- * @note Si no se reciben suficientes argumentos o el archivo no se puede
- * abrir, 
- *       la función imprime un mensaje de error y retorna `EXIT_FAILURE`.
- */
-
 int lamina_constructor(int argc, char *argv[]) {
     int return_value = 0;
     // En caso de recibir menos parametros a los esperados, retorna EXIT_FAILURE
     if (argc < 2) {
-        error_manager(NULL, NULL, "Invalid entrance: you need to specify a .txt and"
-            "the amounth of threads you want to use");
+        error_manager(NULL, NULL, "Invalid entrance: you need to specify a"
+            ".txt and the amounth of threads you want to use");
         return EXIT_FAILURE;
     }
     FILE *file = fopen(argv[1], "r");
@@ -50,13 +32,15 @@ int lamina_constructor(int argc, char *argv[]) {
     // while para leer todos los reglones del txt
     while (fgets(line, sizeof(line), file)) {
         Lamina *lamina = (Lamina *)calloc(1, sizeof(Lamina));
-        shared_file_data * fileobj = (shared_file_data*)calloc(1,sizeof(shared_file_data));
+        shared_file_data * fileobj =
+        (shared_file_data*)calloc(1,sizeof(shared_file_data));
         if (!lamina) {
-            error_manager(lamina, fileobj, "Error: could not allocate memory for"
-                "Lamina");
+            error_manager(lamina, fileobj, "Error: could not allocate memory"
+                "for Lamina");
             return EXIT_FAILURE;
         }
-        snprintf(fileobj->base_route, sizeof(fileobj->base_route), "%s", argv[1]);
+        snprintf(fileobj->base_route, sizeof(fileobj->base_route), "%s",
+        argv[1]);
 
         char *lastSLash = strrchr(fileobj->base_route, '/');
         if (!lastSLash) {
@@ -66,13 +50,14 @@ int lamina_constructor(int argc, char *argv[]) {
         }
         *(lastSLash + 1) = '\0';
         if (strcmp(line, "") == 0) {
-            error_manager(lamina, fileobj, "Error: could not read a line from the .txt"
-                "file");
+            error_manager(lamina, fileobj, "Error: could not read a line from"
+                "the .txt file");
                 return EXIT_FAILURE;
         }
         // Si la cantidad de parametros recibidos no es 5
         // se retorna EXIT_FAILURE
-        return_value  = reading_parameters(lamina, fileobj, fileobj->binary_file_name,
+        return_value  = reading_parameters(lamina, fileobj,
+            fileobj->binary_file_name,
             line);
         if (return_value == EXIT_FAILURE) {
             return EXIT_FAILURE;
@@ -89,32 +74,16 @@ int lamina_constructor(int argc, char *argv[]) {
     }
     return EXIT_SUCCESS;
 }
-
-/**
- * @brief Lee y valida los parámetros de la lamina
- * 
- * Extrae los valores tiempo, conductividad, height y epsilon, guardandolos en
- * el struct lamina
- * 
- * @param lamina Puntero a la estructura Lamina que tiene todos los parametros
- * @param bin_file Nombre del archivo binario generado.
- * @param line Línea de texto con los parámetros a leer.
- * 
- * @return EXIT_SUCCESS si encuentra los parametros, EXIT_FAILURE si no
- * 
- * @note Si la línea no tiene los parámetros esperados o alguno de los valores
- * es inválido, 
- *       la función imprime un mensaje de error y retorna `EXIT_FAILURE`.
- */
-int reading_parameters(Lamina *lamina, shared_file_data* fileobj, char* bin_file, char* line) {
+int reading_parameters(Lamina *lamina, shared_file_data* fileobj,
+    char* bin_file, char* line) {
     char temp[256] = "";
     // si la linea del txt no cuenta con los 5 parametros esperados
     // retorna EXIT_FAILURE
     if (sscanf(line, "%s %" PRIu64 "%lf %lf %lf", temp, &lamina->time,
         &lamina->conductivity,
           &lamina->height, &lamina->epsilon) != 5) {
-            error_manager(lamina, fileobj, "Error: The file of configuration does not"
-                "have the spected parameters");
+            error_manager(lamina, fileobj, "Error: The file of configuration"
+                "does not have the spected parameters");
                 return EXIT_FAILURE;
     }
     // se agrega la ruta al binario para poder leer el archivo
@@ -144,20 +113,6 @@ int reading_parameters(Lamina *lamina, shared_file_data* fileobj, char* bin_file
     }
     return EXIT_SUCCESS;
 }
-/**
- * @brief Inicializa la matriz del plate actual.
- * 
- * Lee los valores de filas y columnas desde un archivo binario,
- * asigna memoria para las matrices de temperaturas y carga sus valores.
- * Luego, llama a `update_lamina()`.
- * 
- * @param lamina Puntero a la estructura Lamina
- * 
- * @return EXIT_SUCCESS si pudo crear la matriz, EXIT_FAILURE si no
- * 
- * @note Si la lectura del archivo falla o la reserva de memoria no es exitosa, 
- *       la función imprime un mensaje de error y retorna `EXIT_FAILURE`.
- */
 int create_lamina(Lamina *lamina, shared_file_data* fileobj) {
     // Inicializamos rows y columns en 0 para evitar posibles valorea basura
     lamina->rows = 0;
@@ -176,7 +131,8 @@ int create_lamina(Lamina *lamina, shared_file_data* fileobj) {
     // Se lee el segundo bloque de bytes donde se encuentra el numero de
     // columnas
     if (fread(&lamina->columns, sizeof(uint64_t), 1, fileobj->file) != 1) {
-        error_manager(lamina, fileobj, "Error: Failed to read columns from file");
+        error_manager(lamina, fileobj, "Error: Failed to read columns from"
+            "file");
         return EXIT_FAILURE;
     }
     // Si el numero de columnas es invalido, se retorna EXIT_FAILURE
@@ -184,11 +140,13 @@ int create_lamina(Lamina *lamina, shared_file_data* fileobj) {
         error_manager(lamina, fileobj, "Error: Invalid number of columns");
         return EXIT_FAILURE;
     }
-    // Reservamos memoria para las filas de las dos matrices de la lamina
-    lamina->temperatures = malloc(sizeof(double) * 2 * lamina->rows * lamina->columns);
+    // Reservamos memoria para el array que contiene todas las temperaturas
+    // tanto las actuales como futuras.
+    lamina->temperatures = malloc(sizeof(double) * 2 * lamina->rows *
+    lamina->columns);
     if (!lamina->temperatures) {
-        error_manager(lamina, fileobj, "Error: No se pudo reservar memoria para las"
-            "filas de las matrices.");
+        error_manager(lamina, fileobj, "Error: No se pudo reservar memoria para"
+            "las filas de las matrices.");
             return EXIT_FAILURE;
     }
     return_value = fillMatriz(lamina, fileobj);
@@ -200,12 +158,14 @@ int create_lamina(Lamina *lamina, shared_file_data* fileobj) {
 
 int fillMatriz(Lamina *lamina, shared_file_data* fileobj) {
     int return_value = 0;
-    // Bucle para leer los valores de la matriz
     for (size_t i = 0; i < lamina->rows; i++) {
         for (size_t j = 0; j < lamina->columns; j++) {
-            size_t index = i * lamina->columns + j;  // Índice en la primera matriz
-            if (fread(&lamina->temperatures[index], sizeof(double), 1, fileobj->file) != 1) {
-                error_manager(lamina, fileobj, "Error: Failed to read temperature values from file");
+            // calculamos el indice 
+            size_t index = i * lamina->columns + j;
+            if (fread(&lamina->temperatures[index], sizeof(double), 1,
+            fileobj->file) != 1) {
+                error_manager(lamina, fileobj, "Error: Failed to read"
+                    "temperature values from file");
                 return EXIT_FAILURE;
             }
         }
@@ -217,21 +177,6 @@ int fillMatriz(Lamina *lamina, shared_file_data* fileobj) {
     }
     return EXIT_SUCCESS;
 }
-/**
- * @brief Actualiza la matriz de temperaturas hasta estabilizarla
- * 
- * Recorre la matriz de temperaturas, actualizando cada celda hasta que todas
- * sean estables (que tengan una diferencia entre el futuro estado y el actual
- * menor a epislon). Intercambia las matrices `temperatures` y
- * next_temperatures` en cada iteración.
- * 
- * @param lamina Puntero a la estructura lamina
- * 
- * @return EXIT_SUCCESS si estabilizo la lamina, EXIT_FAILURE si no
- * 
- * @note Si la simulación falla al finalizar, la función devuelve
- * `EXIT_FAILURE`.
- */
 int update_lamina(Lamina * lamina, shared_file_data *fileobj) {
     int return_value = 0;
     // variable donde se guarda la diferencia de la celda actual con su futuro
@@ -254,26 +199,27 @@ int update_lamina(Lamina * lamina, shared_file_data *fileobj) {
         for (size_t i = 0; i < lamina->rows; i++) {
             for (size_t j = 0; j < lamina->columns; j++) {
                 size_t index = i * lamina->columns + j;
+                // current y next hacen swap en cada iteracion para que las temp
+                // futuras pasen a ser las actuales en cada iteracion.
                 size_t current_index = current_offset + index;
                 size_t next_index = next_offset + index;
 
                 if (i == 0 || i == lamina->rows - 1 ||
                     j == 0 || j == lamina->columns - 1) {
-                    lamina->temperatures[next_index] = lamina->temperatures[current_index];
+                    lamina->temperatures[next_index] =
+                    lamina->temperatures[current_index];
                     continue;
                 }
                 lamina->temperatures[next_index] = 0;
-                update_cell(lamina, i, j, lamina->temperatures + current_offset, lamina->temperatures + next_offset, lamina->columns);
-                double diff = fabs(lamina->temperatures[next_index] - lamina->temperatures[current_index]);
-
+                update_cell(lamina, i, j, lamina->temperatures + current_offset,
+                    lamina->temperatures + next_offset, lamina->columns);
+                double diff = fabs(lamina->temperatures[next_index] -
+                    lamina->temperatures[current_index]);
                 if (diff > lamina->epsilon) {
                     unstable_cells++;
                 }
             }
         }
-
-        // SWAP: intercambiamos los offsets para que la siguiente iteración
-        // el "next" sea el actual y el "actual" sea el siguiente
         size_t temp = current_offset;
         current_offset = next_offset;
         next_offset = temp;
@@ -304,7 +250,8 @@ int update_lamina(Lamina * lamina, shared_file_data *fileobj) {
  * @note Solo se actualizan las celdas internas de la matriz, evitando los
  * bordes.
  */
-void update_cell(Lamina *lamina, size_t row, size_t column, double *current_mat, double *next_mat, size_t cols) {
+void update_cell(Lamina *lamina, size_t row, size_t column, double *current_mat,
+    double *next_mat, size_t cols) {
     size_t idx = row * cols + column;
 
     double up = current_mat[(row - 1) * cols + column];
@@ -313,19 +260,10 @@ void update_cell(Lamina *lamina, size_t row, size_t column, double *current_mat,
     double right = current_mat[row * cols + (column + 1)];
 
     next_mat[idx] = current_mat[idx] +
-                    ((lamina->time * lamina->conductivity) / (lamina->height * lamina->height)) *
+                    ((lamina->time * lamina->conductivity) / (lamina->height *
+                        lamina->height)) *
                     (up + down + right + left - 4 * current_mat[idx]);
 }
-/**
- * @brief Finaliza la simulación y llama a report_file
- * 
- * Llama a `report_file` para escribir el resultado de la simulación. 
- * Si la generación del reporte falla, retorna `EXIT_FAILURE`.
- * 
- * @param lamina Puntero a la estructura lamina
- * @param fileobj PUntero a la estructura de archivos
- * @return `EXIT_SUCCESS` si genero el reporte, EXIT_FAILURE si no
- */
 int finish_simulation(Lamina * lamina, shared_file_data *fileobj) {
     int return_value = report_file(lamina, fileobj);
     if (return_value == EXIT_FAILURE) {
@@ -333,24 +271,6 @@ int finish_simulation(Lamina * lamina, shared_file_data *fileobj) {
     }
     return EXIT_SUCCESS;
 }
-/**
- * @brief Genera y guarda un archivo de reporte en formato TSV con la
- * información de la simulación de la lámina.
- *
- * Esta función crea o abre un archivo TSV donde se almacenan los datos de la
- * simulación, vease el nombre del binario, tiempo transcurrido, epsilon,
- * height y conductivity Si no se puede abrir el archivo, se crea uno nuevo en
- * una ruta alternativa (dentro de la carpeta job###).
- * Además, se formatea el tiempo en formato legible para una persona
- * 
- * @param lamina Un puntero a la estructura lamina
- *
- * @return EXIT_SUCCESS Si el reporte fue exitoso, EXIT_FAILURE si no
- *
- * @note Esta función intenta abrir un archivo en la ruta proporcionada por la
- * estructura `Lamina`. Si no se puede abrir, intentará crear un archivo en una
- * ruta alternativa.
- */
 int report_file(Lamina *lamina, shared_file_data *fileobj) {
     char text[260] = "";
     char temp[260] = "";
@@ -391,32 +311,13 @@ void print_lamina(Lamina* lamina) {
         printf("\n");
     }
 }
-/**
- * @brief Maneja casi todos los errores, llamando a delete_lamina luego
- *
- * Esta funcion recibe el mensaje a imprimir como reporte del error, una vez
- * hecho eso, llama la funcion delete_lamina() para liberar toda la memoria
- * aun no liberada
- *
- * @param lamina Un puntero a la estructura lamina
- * @param error_message Un mensaje de error que se imprime en la salida de
- * error estándar.
- */
-void error_manager(Lamina *lamina, shared_file_data *fileobj, const char* error_message) {
+void error_manager(Lamina *lamina, shared_file_data *fileobj,
+    const char* error_message) {
     fprintf(stderr, "%s\n", error_message);
     if (lamina) {
         delete_lamina(lamina, fileobj);
     }
 }
-/**
- * @brief Libera los recursos de lamina
- *
- * Esta función libera la memoria dinámica utilizada por la estructura `Lamina`
- * Antes de hacerle free verifica que exista lo que se piensa borrar para evitar
- * intentar liberar memoria ya liberada o que nunca fue reservada.
- *
- * @param lamina Un puntero a la estructura lamina, si no existe, no hace nada.
- */
 void delete_lamina(Lamina * lamina, shared_file_data* fileobj) {
     if (lamina) {
         if (lamina->temperatures) {
@@ -426,18 +327,6 @@ void delete_lamina(Lamina * lamina, shared_file_data* fileobj) {
         free(lamina);
     }
 }
-/**
- * @brief Formatea el tiempo en segundos a una cadena legible para humanos
- *
- * Esta función convierte el tiempo en segundos recibidos en un formato legible
- * para un ser humano: "YYYY/MM/DD hh:mm:SS".
- *
- * @param seconds Cantidad de segundos desde la época Unix a convertir a
- * formato de tiempo.
- * @param text Puntero a una cadena de caracteres donde se almacenará el tiempo
- * formateado.
- * @param capacity Tamaño máximo de la cadena `text`.
- */
 void format_time(const time_t seconds, char* text, const size_t capacity) {
     struct tm* gmt = gmtime(&seconds);
     size_t lenght = strlen(text);
