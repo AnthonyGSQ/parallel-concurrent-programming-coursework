@@ -7,3 +7,5 @@ doc/
 jobs/job020-input/
 tsv/
 callgrind.out.*
+jobs/job003b/
+jobs/job020-input/

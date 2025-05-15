@@ -1,0 +1,6 @@
+Count  : 1
+Minimum: 7
+Maximum: 7
+Average: 7
+Std.Dev: 0
+Median : 7

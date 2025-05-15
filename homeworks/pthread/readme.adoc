@@ -1,4 +1,5 @@
-= Tarea01 serial
+= Tarea02 pthread
+:toc-title: Tabla de contenidos
 :experimental:
 :nofooter:
 :source-highlighter: pygments
@@ -7,7 +8,7 @@
 :toc:
 :xrefstyle: short
 
-[[descripcion del problema]]
+[[descripcion_del_problema]]
 
 == Descripcion del problema
 
@@ -67,6 +68,7 @@ En este caso el hilo uno procesaria las filas desde la primera hasta la fila nue
 - Navega a la carpeta `serial` y compila con `make`
 De esta manera se creara el ejecutable en la carpeta bin.
 Una vez compilado el proyecto, puedes ejecutarlo usando el siguiente comando:
+
 [source, bash]
 ----
 ./bin/serial ./jobs/job###/job###.txt
@@ -85,6 +87,32 @@ make clean run
 ---
 
 Esto correra el programa tomando como archivo el job002b/job002.txt para procesar.
+
+== Ejemplo de entrada y salida
+
+=== Input
+Cada archivo txt cuenta con varias placas para ser procesadas, en este readme se agrega solo dos de dichas placas.
+
+[source, bash]
+---
+./bin/serial ./jobs/job002b/job002.txt
+---
+
+Laminas leidas:
+
+[source, bash]
+plate001.bin	1	50	1000	1e-14	129570	0000/00/01	11:59:30
+plate002.bin	1	25	1000	1e-14	250939	0000/00/02	21:42:19
+
+=== Salida
+La salida es escrita en un archivo tsv cuyo contenido para la primera lamina es:
+[source, bash]
+plate001.bin	1	50	1000	1e-14	0000/00/01	11:59:30
+
+Contenido del archivo tsv de la segunda lamina:
+[source,bash]
+plate002.bin	1	25	1000	1e-14	0000/00/02	21:42:19
+
 
 [[creditos]]
 == Creditos

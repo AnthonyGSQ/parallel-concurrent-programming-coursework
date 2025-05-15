@@ -1,0 +1,15 @@
+procedure main()
+  shared al_ready = semaphore(0)
+  create_thread(thread_a)
+  create_thread(thread_b)
+end procedure
+
+procedure thread_a()
+  statement a1
+  signal(al_ready)
+end procedure
+
+procedure thread_b()
+  wait(al_ready)
+  statement b1
+end procedure

@@ -1,4 +1,5 @@
 = Reporte de optimizaciones
+:toc-title: Tabla de contenidos
 :experimental:
 :nofooter:
 :source-highlighter: pygments
@@ -11,18 +12,18 @@
 
 [[serial_optimizations]]
 == Optimizaciones seriales
-
+IMPORTANTE: medidas temporales tomadas de job003, solo para ver si existe una mejoria de rendimiento o no
 [%autowidth.stretch,options="header"]
 |===
 |Iter. |Etiqueta |Duración (s) |_Speedup_ |Descripción corta
-|0 |Serial0 |254.465 |1.00 |Versión serial inicial (Tarea01)
-|1 |Serial01 |150.581 |1.69 | Reemplazo de las dos matrices por un solo array
+|0 |Serial0 |139.642 |1.00 |Versión serial inicial (Tarea01)
+|1 |Serial1 |126.431 |1.105 |
+|2 | | | |
 |===
 
 
 [[serial_iter00]]
 === Versión serial original (Tarea01)
-
 La version serial00 contaba con dos matrices double [][] para manejar las
 temperaturas actuales y las del siguiente estado.
 
