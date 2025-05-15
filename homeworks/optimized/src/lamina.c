@@ -10,7 +10,7 @@
 #include <time.h>
 /***
  * @file lamina.c
- * @brief Implementacion de la funcion lamina.c
+ * @brief Implementacion de la clase lamina.c
  * @author Anthony Sanchez
  * @date 2025-03-29
  */
