@@ -1,0 +1,105 @@
+ESTRUCTURA Lamina {
+    ENTERO filas
+    ENTERO columnas
+    // la k se refiere al estado de la lamina
+    ENTERO k
+    // Conductividad térmica de la lámina
+    FLOTANTE conductividad
+    FLOTANTE altura_celda
+    // Parametro utilizado para verificar la estabilidad termica de la lamina
+    FLOTANTE epsilon
+    // Matriz que almacena las temperaturas de cada celda
+    MATRIZ_DE_FLOTANTES temperaturas
+}
+
+ESTRUCTURA {
+    int x1;
+    int x2;
+    int y1;
+    int y2;
+} private_data_t
+
+ESTRUCTURA {
+    size_t x_increment
+    size_t y_increment
+    private_data_t *private_data
+} public_data_t
+
+// Funcion encargada del recibimiento de los parametros, abrir los archivos
+// crear el objeto lamina y llamar a las funciones validate_entrance(),
+// reading_parameters() y finalmente a create_lamina().
+// En caso de recibir parametros invalidos, no encontrar el archivo indicado
+// por el usuario, no poder abrir el archivo encontrado o no poder crear
+// la lamina, retorna EXIT_FAILURE
+FUNCION lamina_constructor(ENTERO argc, STRING argv[])
+
+// Funcion encargada de verificar que los parametros recibidos del txt
+// sean validos, ej: Que height no sea 0
+int reading_parameters(Lamina *lamina, STRING filename, STRING line);
+
+// Funcion encargada de reservar memoria para las matrices de la interfaz
+// temperatures y next_temperatures. Lee el archivo binario, tomando los
+// primeros 8 bytes como el total de filas, los segundos 8 bytes como numero
+// de columnas y el resto como los valores de la lamina.
+// En caso de no encontrar el archivo binario, no poder reservar memoria
+// para las matrices o recibir un numero invalido de filas o columnas
+// retorna EXIT_FAILURE
+
+// esta funcion estara encargada de averiguar cuanto trabajo debe realizar cada
+// thread, primeramente toma como parametro el valor mas alto entre
+// filas y columnas, una vez hecho esto, cae en los siguientes casos:
+// 1- Menos threads que el parametro: Divide la matriz thread_num/parametro
+// 2- Cantidad de threads igual al parametro: Una linea por hilo
+// (fila o columna) 
+// 3- Mas threads que parametro: Aqui suceden 2 cosas:
+// a) thread_num < filas * columnas: Seguimos la logica del caso 1 y dividimos
+// el otro valor (si parametro es filas, este otro valor sera columnas y
+// viceversa) hasta tener bloques suficientes para cada hilo
+// TODO (AnthonyGSQ): falta decidir cual sera el tope para esto
+// thread_num >= filas * columnas:  Asignamos un tope para evitar que cada hilo
+// trabaje una celda pues esto no es eficiente, una vez asignado el tope
+// le damos bloques de la matriz a cada hilo, el tope sera las dimensiones de
+// este bloque
+funcion plan_thread_distribution(lamina, fileobj)
+
+int create_lamina(Lamina *lamina);
+
+// Funcion encargada de crear el archivo de reporte tsv de cada respectiva
+// plate, una vez creado el archivo, agrega los parametros finales de la
+// lamina, vease el tiempo que le tomo estabilizarse y los parametros iniciales
+int report_file(Lamina *lamina);
+
+// Funcion encargada de actualizar la lamina del estado k al estado k+1
+// va aumentando la temperatura, realizando llamados a update_cell() solo
+// si no se esta trabajando con un borde, si la celda actual es un borde
+// la ignora.
+int update_lamina(Lamina * lamina);
+
+// funcion encargada de hacer que cada hilo actualice unicamente su respectivo
+// bloque de la matriz, tomando como referencia las coordenadas dentro
+// del struct privado del hilo actual: x1, x2, y1, y2.
+funcion update_lamina_block(OBJETO lamina, OBJETO fileobj, PUNTERO private_data,
+    ENTERO parameter, OBJETO private_data_t)
+
+// Funcion encargada de actualizar la celda de la posicion recibida,
+// utilizando la formula de difusion de calor y guardandola en la
+// misma posicion pero en lamina->next_temperatures.
+void update_cell(Lamina * lamina, uint64_t row, uint64_t column);
+
+// Funcion encargada de finalizar la simulacion y guardar los datos de la lamina
+// final en el .bin y sus datos en el .tsv correctos.
+int finish_simulation(Lamina * lamina);
+
+// Funcion encargada de imprimir la lamina
+void print_lamina(Lamina * lamina);
+
+// Funcion encargada de mostrar un mensaje de error y llamar a la funcion
+// delete_lamina() para liberar toda la memoria
+void error_manager(Lamina *lamina, STRING error_message);
+
+// Funcion encargada de liberar toda la memoria aun no liberada de la lamina
+void delete_lamina(Lamina *lamina);
+
+// Funcion encargada de transformar el tiempo transcurrido en formato de
+// horas/dias/meses
+void format_time(DOUBLE seconds, STRING text, DOUBLE capacity);

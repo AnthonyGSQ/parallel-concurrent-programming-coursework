@@ -1,0 +1,255 @@
+incluir lamina.h
+// estructura privada para los hilos, cuenta con 4 variables
+// las cuales son las coordenadas desde donde deben iniciar el
+// recorrido del bloque de la matriz correspondiente a cada hilo
+// (las variables con el uno) y las coordenadas donde termina dicho
+// recorrido (las variables con el dos).
+
+// implementacion de las funciones
+función lamina_constructor(argc, argv):
+    return_value = 0
+
+    // Verificar si los parámetros son suficientes
+    si argc < 2:
+        mostrar_error("Invalid entrance: you need to specify a .txt and the amount of threads you want to use")
+        retornar EXIT_FAILURE
+
+    // Intentar abrir el archivo .txt
+    archivo = abrir_archivo(argv[1], "r")
+    si archivo es NULL:
+        mostrar_error("Error: could not open file")
+        retornar EXIT_FAILURE
+
+    // Leer línea por línea del archivo
+    mientras haya líneas en archivo:
+        lamina = reservar_memoria_para_Lamina()
+
+        // Verificar si la memoria se ha asignado correctamente
+        si lamina es NULL:
+            mostrar_error("Error: could not allocate memory for Lamina")
+            retornar EXIT_FAILURE
+
+        // Establecer la ruta base
+        establecer_ruta_base(lamina, argv[1])
+
+        // Verificar que la ruta sea válida
+        si ruta_invalida(lamina->base_route):
+            mostrar_error("Error: invalid route")
+            liberar_memoria(lamina)
+            retornar EXIT_FAILURE
+
+        // Leer y procesar la línea del archivo
+        si línea_vacia(line):
+            mostrar_error("Error: could not read a line from the .txt file")
+            retornar EXIT_FAILURE
+
+        // Leer los parámetros de la línea
+        return_value = leer_parametros(lamina, lamina->binary_file_name, line)
+        si return_value es EXIT_FAILURE:
+            retornar EXIT_FAILURE
+
+        // Intentar abrir el archivo binario de la lamina
+        lamina->file = abrir_archivo(lamina->binary_file_name, "rb")
+        mostrar("Creating lamina...")
+
+        // Crear la lamina
+        return_value = crear_lamina(lamina)
+        si return_value es EXIT_FAILURE:
+            retornar EXIT_FAILURE
+
+        // Liberar la memoria de la lamina
+        liberar_memoria(lamina)
+
+    // Retornar éxito
+    retornar EXIT_SUCCESS
+FIN FUNCION
+
+función reading_parameters(lamina, bin_file, line):
+    // Inicializar buffer temporal
+    temp = ""
+
+    // Verificar que la línea contenga los 5 parámetros esperados
+    si sscanf(line, "%s %" PRIu64 "%lf %lf %lf", temp, lamina->time, lamina->conductivity, lamina->height, lamina->epsilon) != 5:
+        mostrar_error("Error: The file of configuration does not have the expected parameters")
+        retornar EXIT_FAILURE
+    FIN SI
+    // Construir la ruta al archivo binario
+    concatenar(lamina->binary_file_name, lamina->base_route, temp)
+    imprimir("Binary file: %s", bin_file)
+    imprimir("Time: %" PRIu64, lamina->time)
+
+    // Verificar que los valores sean válidos
+    si lamina->time == 0:
+        mostrar_error("Invalid time")
+        retornar EXIT_FAILURE
+    FIN SI
+    imprimir("Conductivity: %.f", lamina->conductivity)
+    si lamina->conductivity <= 0:
+        mostrar_error("Invalid conductivity")
+        retornar EXIT_FAILURE
+    FIN SI
+    imprimir("Height: %.f", lamina->height)
+    si lamina->height <= 0:
+        mostrar_error("Invalid height")
+        retornar EXIT_FAILURE
+    FIN SI
+    imprimir("Epsilon: %.15f", lamina->epsilon)
+    si lamina->epsilon <= 0:
+        mostrar_error("Invalid epsilon")
+        retornar EXIT_FAILURE
+    FIN SI
+    retornar EXIT_SUCCESS
+FIN FUNCION
+
+función create_lamina(lamina):
+    // Inicializar filas y columnas a 0 para evitar valores basura
+    lamina->rows = 0
+    lamina->columns = 0
+
+    leer del binario la cantidad de filas
+    leer del binario la cantidad de columnas
+    crear las filas
+    crear las columnas
+    llamar a plan_thread_distribution
+retornar EXIT_SUCCESS
+
+funcion fill_lamina(lamina) {
+    Para i hasta lamina->rows hacer
+        Para j hasta lamina->columns hacer
+            leer el binario para guardar el numero [i][j] en su posicion
+        fin Para
+    Fin para
+}
+// esta funcion estara encargada de averiguar cuanto trabajo debe realizar cada
+// thread
+funcion plan_thread_distribution(lamina, fileobj) {
+    // no vale la pena crear muchos hilos para matrices pequenas
+    Si la lamina tiene menos de 100 celdas hacer
+        thread_count = 1;
+        retornar
+    Fin si
+    // limitamos los hilos si son demaciados
+    Si thread_count > total_cells hacer
+        thread_count = total_cells;
+    Fin si
+    cells_per_thread = total_cells / thread_count
+    // debido al overhead, es conveniente que cada hilo procese al
+    // menos 100 celdas
+    SI cells_per_thread < 100 hacer
+        cells_per_thread = 100;
+        thread_count = total_cells / 100
+    Fin si
+    // estas son las cantidades de filas/columnas que debera procesar
+    // cada hilo.
+    public_data->x_increment = lamina->rows / thread_count;
+    public_data->y_increment = lamina->columns / thread_count;
+    retornar
+}
+
+función update_lamina(lamina):
+    inicializar diff a 0
+    inicializar unstable_cells a 1
+    inicializar temp como NULL
+    crear n hilos
+    crear n structs privados
+    mientras unstable_cells > 0:
+        Para i hasta thread_num hacer
+                Si la celda está en el borde:
+                    continuar
+                Fin si
+                // aqui va la logica de decirle a cada hilo en su private_data
+                // sus respectivos x1, x2, y1, y2 para que trabajen la funcion
+                //update_lamina_block
+                // por increase, entiendase asignar a cada hilo x bloque de la
+                // matriz, moviendo las coordenadas al siguiente bloque a
+                // procesar y enviarle al hilo dichas coords a recorrer
+                increase x1, x2, y1, y2
+                guardar x1, x2, y1, y2 en el private_data del thread actual
+                thread[i](update_lamina_block(lamina, i, j, parameter
+                    private_data_t[i]));
+        Fin Para
+        // Intercambia las matrices
+        lamina->temperatures pasa a ser lamina->next_temperatures
+        lamina->next_temperatures pasa a ser lamina->temperatures
+        // aumentamos el tiempo transcurrido de la simulacion
+        lamina->k += lamina->time
+    FIN MIENTRAS
+
+    imprimir "Lamina estabilizada"
+
+    return_value = finish_simulation(lamina)
+    si return_value == EXIT_FAILURE:
+        retornar EXIT_FAILUREPara j = 0 hasta lamina->columns hacer
+
+retornar EXIT_SUCCESS
+// funcion encargada de hacer que cada hilo actualice unicamente su respectivo
+// bloque de la matriz
+funcion update_lamina_block(OBJETO lamina, OBJETO fileobj, PUNTERO private_data,
+    ENTERO parameter, OBJETO private_data_t){
+    // bucle para recorrer el bloque asignado a cada thread, tomando las 4
+    // coords del bloque correspondiente de cada hilo
+    int result = 0;
+    int unstable_cells = 0;
+    Si parameter == lamina->rows hacer
+        Para i = private_data_t->x1 hasta private_data_t->x2 hacer
+            Para j = private_data_t->y1 hasta private_data_t->y2 hacer
+                result = actualizar_celda(lamina, i, j)
+                Si result == EXIT_FAILURE hacer
+                    unstable_cells++;
+                Fin SI
+            Fin para
+        Fin para
+    retornar unstable_cells;
+}
+// los retornos agregados indicaran a cada hilo si una de las celdas que tratan
+// es inestable actualmente, para asi continuar actualizando estados
+funcion void update_cell(OBJETO lamina, ENTERO row, ENTERO column) {
+    // aseguramos que no se procesara una celda invalida
+    Si la celda recibida no se sale de los bordes hacer 
+        // formula para actualizar la temperatura de la celda
+        lamina->next_temperatures[row][column] =
+        lamina->temperatures[row][column] +
+        ((lamina->k * lamina->conductivity) /
+        (lamina->height * lamina->height)) *
+        (up + down + right + left - (4 * lamina->temperatures[row][column]));
+        double diff = 0;
+        diff = diferencia entre lamina->next_temperatures[i][j] y
+            lamina->temperatures[i][j]
+        Si diff > lamina->epsilon:
+            retornar EXIT_FAILURE;
+        Fin SI
+    FIN SI
+    retornar EXIT_SUCCESS;
+}
+
+funcion int finish_simulation(OBJETO lamina) {
+    llamar a report_file
+    SI report_file fallo hacer {
+        retornar EXIT_FAILURE;
+    }
+    retornar EXIT_SUCCESS;
+}
+
+funcion void error_manager(Lamina *lamina, const char* error_message) {
+    imprimir(error_message)
+    Si lamina existe {
+        delete_lamina(lamina);
+    }
+}
+
+funcion void delete_lamina(OBJETO lamina) {
+    SI existe lamina {
+        SI existe lamina->temperaturas {
+            liberar lamina->temperaturas
+        }
+        SI existe lamina->next_temperaturas {
+            liberar lamina->next_temperaturas
+        }
+        SI existe lamina->file {
+            liberar lamina->file
+        }
+        SI existe lamina->report_file {
+            liberar lamina->report_file
+        }
+    }
+}
