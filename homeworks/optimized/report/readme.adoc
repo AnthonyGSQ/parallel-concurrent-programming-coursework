@@ -15,23 +15,52 @@
 [%autowidth.stretch,options="header"]
 |===
 |Iter. |Etiqueta |Duración (s) |_Speedup_ |Descripción corta
-|0 |Serial0 | |1.00 |Versión serial inicial (Tarea01)
-|1 | | | |
-|2 | | | |
+|0 |Serial0 |254.465 |1.00 |Versión serial inicial (Tarea01)
+|1 |Serial01 |150.581 |1.69 | Reemplazo de las dos matrices por un solo array
 |===
 
 
 [[serial_iter00]]
 === Versión serial original (Tarea01)
 
-#Describa aquí qué aspectos tenía la versión serial no eficientes que podrían o fueron opitimizados luego. También aspectos que usted considera eficientes, los cuales explicarían por qué no amerita una optimización.#
+La version serial00 contaba con dos matrices double [][] para manejar las
+temperaturas actuales y las del siguiente estado.
 
 
 [[serial_iter01]]
 === Iteración 1
 
-#Para cada iteración del ciclo de optimización, cree una subsección como esta. Resuma en máximo un párrafo en qué consiste la optimización. Su objetivo es que quien lea este documento entienda claramente qué se intentó mejorar. Provea trocitos de código fuente o pseudocódigo que ayude a entender la optimización potencial. Indique si el intento logró incrementar el desempeño. En caso de no lograrlo, conjeture la causa. Eso ayudaría a ahorrar tiempo a otras personas que tengan la misma inquietud.#
+Para la primera iteracion del serial, se reemplazo las dos matrices *double
+temperatures[rows][columns]* por un solo array que almacena tanto las
+temperaturas actuales como las siguientes. Al cambiar dichas dos matrices
+por un solo array que contiene 2*(filas * columnas) celdas, se reduce
+drasticamente la sobrecarga de memoria, el acceso a las posiciones y se
+aprovechan mejor las capacidades de la memoria cache.
 
+==== Antes :
+[source, bash]
+----
+double ** temperatures
+double ** next_temperatures
+
+---------------------------
+
+double** current = malloc(rows * sizeof(double*));
+double** next = malloc(rows * sizeof(double*));
+
+for (size_t i = 0; i < rows; i++) {
+    temperatures[i] = malloc(columns * sizeof(double));
+    next_temperatures[i] = malloc(columns * sizeof(double));
+}
+----
+
+==== Despues:
+[source, bash]
+----
+double * temperatures
+---------------------
+double* temperatures = malloc(2 * rows * columns * sizeof(double));
+----
 
 [[concurrent_optimizations]]
 == Optimizaciones concurrentes

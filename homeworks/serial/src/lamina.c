@@ -185,28 +185,11 @@ int create_lamina(Lamina *lamina, shared_file_data* fileobj) {
         return EXIT_FAILURE;
     }
     // Reservamos memoria para las filas de las dos matrices de la lamina
-    lamina->temperatures = (double **)malloc(lamina->rows * sizeof(double *));
-    lamina->next_temperatures = (double **)malloc(lamina->rows *
-        sizeof(double*));
-    if (!lamina->temperatures || !lamina->next_temperatures) {
+    lamina->temperatures = malloc(sizeof(double) * 2 * lamina->rows * lamina->columns);
+    if (!lamina->temperatures) {
         error_manager(lamina, fileobj, "Error: No se pudo reservar memoria para las"
             "filas de las matrices.");
             return EXIT_FAILURE;
-    }
-
-    // Reservar memoria para cada fila
-    for (size_t i = 0; i < lamina->rows; i++) {
-        lamina->temperatures[i] = (double *)malloc(lamina->columns *
-            sizeof(double));
-        lamina->next_temperatures[i] = (double *)malloc(lamina->columns *
-            sizeof(double));
-
-        // Comprobar si la reserva de memoria falló para alguna fila
-        if (!lamina->temperatures[i] || !lamina->next_temperatures[i]) {
-            error_manager(lamina, fileobj, "Error: No se pudo reservar memoria para las"
-                "filas de las matrices.");
-                return EXIT_FAILURE;
-        }
     }
     return_value = fillMatriz(lamina, fileobj);
     if(return_value == EXIT_FAILURE) {
@@ -220,16 +203,13 @@ int fillMatriz(Lamina *lamina, shared_file_data* fileobj) {
     // Bucle para leer los valores de la matriz
     for (size_t i = 0; i < lamina->rows; i++) {
         for (size_t j = 0; j < lamina->columns; j++) {
-            if (fread(&lamina->temperatures[i][j], sizeof(double), 1,
-            fileobj->file) != 1) {
-                error_manager(lamina, fileobj, "Error: Failed to read temperature values"
-                    "from file");
+            size_t index = i * lamina->columns + j;  // Índice en la primera matriz
+            if (fread(&lamina->temperatures[index], sizeof(double), 1, fileobj->file) != 1) {
+                error_manager(lamina, fileobj, "Error: Failed to read temperature values from file");
                 return EXIT_FAILURE;
             }
         }
     }
-    // TODO(AnthonyGSQ): Impresion temporal, es solo para ver que todo sirva
-    // hasta aca
     print_lamina(lamina);
     return_value = update_lamina(lamina, fileobj);
     if (return_value == EXIT_FAILURE) {
@@ -257,54 +237,48 @@ int update_lamina(Lamina * lamina, shared_file_data *fileobj) {
     // variable donde se guarda la diferencia de la celda actual con su futuro
     // estado para compararla con el epsilon y saber si dicha celda esta estable
     double diff = 0;
-    double estados;
+    int estados = 0;
     // variable para contar cuantas celdas no estan estables, con solo una no
     // estable, el while se vuelve a ejecutar
     size_t unstable_cells = 1;
-    double** temp = NULL;
+    // variable para calcular el indice de la matriz actual
+    size_t index = 0;
+    // variable para calcular el indice de la matriz del siguiente estado
+    size_t next_index = 0;
+    size_t total_cells = lamina->rows * lamina->columns;
+    size_t current_offset = 0;
+    size_t next_offset = total_cells;
     while (unstable_cells > 0) {
         estados++;
-        // El valor de unstable_cells se resetea despues de procesar una vez
-        // la lamina entera, asi aseguramos que el bucle no termine hasta
-        // no encontrar ni una sola celda inestable
         unstable_cells = 0;
-        // Para evitar calculos incorrectos, se resetea la
-        //  matriz next_temperatures
         for (size_t i = 0; i < lamina->rows; i++) {
             for (size_t j = 0; j < lamina->columns; j++) {
-                if (i == 0 || i == lamina->rows - 1 ||
-                    j == 0 || j == lamina->columns -1) {
-                lamina->next_temperatures[i][j] =
-                lamina->temperatures[i][j];
-            } else {
-                lamina->next_temperatures[i][j] = 0;
-            }
-            }
-        }
+                size_t index = i * lamina->columns + j;
+                size_t current_index = current_offset + index;
+                size_t next_index = next_offset + index;
 
-        for (size_t i = 0; i < lamina->rows; i++) {
-            for (size_t j = 0; j < lamina->columns; j++) {
-                // if para ignorar los bordes de la matriz
                 if (i == 0 || i == lamina->rows - 1 ||
-                      j == 0 || j == lamina->columns -1) {
-                        continue;
+                    j == 0 || j == lamina->columns - 1) {
+                    lamina->temperatures[next_index] = lamina->temperatures[current_index];
+                    continue;
                 }
-                update_cell(lamina, i, j);
-                diff = fabs(lamina->next_temperatures[i][j] -
-                    lamina->temperatures[i][j]);
-                // SI la celda actual no esta estable, unstable_cells aumenta
-                // su valor, asegurando que la lamina sea procesada un estado
-                // mas
+                lamina->temperatures[next_index] = 0;
+                update_cell(lamina, i, j, lamina->temperatures + current_offset, lamina->temperatures + next_offset, lamina->columns);
+                double diff = fabs(lamina->temperatures[next_index] - lamina->temperatures[current_index]);
+
                 if (diff > lamina->epsilon) {
                     unstable_cells++;
                 }
             }
         }
-        // EL estado k+1 pasa a ser el estado k y el estado k pasa a ser el
-        // estado k+1 para ser reseteada enteramente.
-        temp = lamina->temperatures;
-        lamina->temperatures = lamina->next_temperatures;
-        lamina->next_temperatures = temp;
+
+        // SWAP: intercambiamos los offsets para que la siguiente iteración
+        // el "next" sea el actual y el "actual" sea el siguiente
+        size_t temp = current_offset;
+        current_offset = next_offset;
+        next_offset = temp;
+
+        printf("Estado: %d\n", estados);
     }
     printf("Lamina estabilizada: \n");
     lamina->k = estados;
@@ -330,21 +304,17 @@ int update_lamina(Lamina * lamina, shared_file_data *fileobj) {
  * @note Solo se actualizan las celdas internas de la matriz, evitando los
  * bordes.
  */
-void update_cell(Lamina * lamina, uint64_t row, uint64_t column) {
-    // aseguramos que no se procesara una celda invalida
-    if (row > 0 && row < lamina->rows - 1 && column > 0 &&
-        column < lamina->columns - 1) {
-        double up = lamina->temperatures[row - 1][column];
-        double down = lamina->temperatures[row + 1][column];
-        double left = lamina->temperatures[row][column - 1];
-        double right = lamina->temperatures[row][column + 1];
-        // formula para actualizar la temperatura de la celda
-        lamina->next_temperatures[row][column] =
-        lamina->temperatures[row][column] +
-        ((lamina->time * lamina->conductivity) /
-        (lamina->height * lamina->height)) *
-        (up + down + right + left - (4 * lamina->temperatures[row][column]));
-    }
+void update_cell(Lamina *lamina, size_t row, size_t column, double *current_mat, double *next_mat, size_t cols) {
+    size_t idx = row * cols + column;
+
+    double up = current_mat[(row - 1) * cols + column];
+    double down = current_mat[(row + 1) * cols + column];
+    double left = current_mat[row * cols + (column - 1)];
+    double right = current_mat[row * cols + (column + 1)];
+
+    next_mat[idx] = current_mat[idx] +
+                    ((lamina->time * lamina->conductivity) / (lamina->height * lamina->height)) *
+                    (up + down + right + left - 4 * current_mat[idx]);
 }
 /**
  * @brief Finaliza la simulación y llama a report_file
@@ -403,8 +373,8 @@ int report_file(Lamina *lamina, shared_file_data *fileobj) {
         fileobj->report_file = fopen(alternative_route, "w+");
     }
     double time = lamina->time / lamina->k;
-    snprintf(text, sizeof(temp), "%s.bin\t%g\t%g\t%g\t%g\t", lastSLash,
-    time, lamina->conductivity, lamina->height, lamina->epsilon);
+    snprintf(text, sizeof(temp), "%s.bin\t%g\t%g\t%g\t%g\t%g\t", lastSLash,
+    time, lamina->conductivity, lamina->height, lamina->epsilon, lamina->k);
     format_time(lamina->time, text, sizeof(text));
     fprintf(fileobj->report_file, "%s", text);
     return EXIT_SUCCESS;
@@ -412,9 +382,11 @@ int report_file(Lamina *lamina, shared_file_data *fileobj) {
 
 void print_lamina(Lamina* lamina) {
     printf("Matriz de temperaturas:\n");
+    size_t index = 0;
     for (uint64_t i = 0; i < lamina->rows; i++) {
         for (uint64_t j = 0; j < lamina->columns; j++) {
-            printf("[%g] ", lamina->temperatures[i][j]);
+            index = i * lamina->columns + j;
+            printf("[%g] ", lamina->temperatures[index]);
         }
         printf("\n");
     }
@@ -448,16 +420,7 @@ void error_manager(Lamina *lamina, shared_file_data *fileobj, const char* error_
 void delete_lamina(Lamina * lamina, shared_file_data* fileobj) {
     if (lamina) {
         if (lamina->temperatures) {
-            for (size_t i = 0; i < lamina->rows; i++) {
-                free(lamina->temperatures[i]);
-            }
             free(lamina->temperatures);
-        }
-        if (lamina->next_temperatures) {
-            for (size_t i = 0; i < lamina->rows; i++) {
-                free(lamina->next_temperatures[i]);
-            }
-            free(lamina->next_temperatures);
         }
         delete_files(fileobj);
         free(lamina);

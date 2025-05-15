@@ -22,7 +22,7 @@ typedef struct Lamina {
     /**
      * @brief El valor de k utilizado en la simulación.
      */
-    uint64_t k;
+    double k;
     uint64_t time;
     /**
      * @brief Conductividad térmica del material.
@@ -39,8 +39,7 @@ typedef struct Lamina {
      * cuando las temperaturas ya no cambian significativamente entre pasos.
      */
     double epsilon;
-    double **temperatures;
-    double **next_temperatures;
+    double *temperatures;
     
 } Lamina;
 /**
@@ -108,8 +107,8 @@ int update_lamina(Lamina *lamina, shared_file_data *fileobj);
  * @param row Fila de la celda a actualizar.
  * @param column Columna de la celda a actualizar.
  */
-void update_cell(Lamina *lamina, uint64_t row, uint64_t column);
-
+void update_cell(Lamina *lamina, size_t row, size_t column, double *current_mat,
+    double *next_mat, size_t cols);
 /**
  * @brief Finaliza la simulación y guarda los resultados en archivos.
  * 
