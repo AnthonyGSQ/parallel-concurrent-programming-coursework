@@ -9,7 +9,6 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-#include <pthread.h>
 #include <assert.h>
 /***
  * @file lamina.c
@@ -92,7 +91,7 @@ int lamina_constructor(int argc, char *argv[]) {
         if (return_value == EXIT_FAILURE) {
             return EXIT_FAILURE;
         }
-        return_value = update_lamina(lamina, fileobj, public_data);
+        return_value = starThreads(lamina, fileobj, public_data);
         if (return_value == EXIT_FAILURE) {
         return EXIT_FAILURE;
     }
@@ -249,43 +248,41 @@ void plan_thread_distribution(Lamina *lamina,
     public_data->x_increment = lamina->rows/public_data->thread_count;
     public_data->y_increment = lamina->columns/public_data->thread_count;
 }
-int update_lamina(Lamina * lamina, file_struct *fileobj,
-    public_data_t* public_data) {
-    int return_value = 0;
-    public_data->lamina = lamina;
 
-    size_t unstable_blocks = 1;
-    int estados = 0;
-    double** temp = NULL;
+int starThreads(Lamina *lamina, file_struct *fileobj,
+    public_data_t* public_data) {
+    public_data->lamina = lamina;
+    // cantidad de hilos a crear
     size_t thread_count = public_data->thread_count;
-    // creamos n private_datas para los n threads
-    private_data_t* private_data = calloc(thread_count,
-        sizeof(private_data_t));
-    if (!private_data) {
+    // creamos thread_count structs para cada hilo
+    private_data_t* private_data = calloc(thread_count, sizeof(private_data_t));
+    // si no se pudieron crear, retorna EXIT_FAILURE
+    if(!private_data) {
         error_manager(lamina, fileobj,
             "Error: could not make calloc for private_data");
         return EXIT_FAILURE;
     }
-    // creamos los n hilos
+    // creamos los thread_count hilos
     pthread_t* threads = calloc(thread_count, sizeof(pthread_t));
+    // si no se pudieron crear, retorna EXIT_FAILURE;
     if (!threads) {
         error_manager(lamina, fileobj,
             "Error: could not make calloc for threads");
-        free(private_data);
         return EXIT_FAILURE;
     }
-    // bucle para asignarle el thread_num y el public data a cada private data
-    for (size_t i = 0; i < thread_count; i++) {
-        private_data[i].thread_num = i;
-        private_data[i].public_data = public_data;
-    }
-    while (unstable_blocks > 0) {
-        estados++;
-        unstable_blocks = 0;
-        // bucle para asignarle trabajo a cada hilo
+    // llamar a update lamina
+    // bucle para asignarle trabajo a cada hilo
+    pthread_barrier_init(&public_data->barrier, NULL,
+        public_data->thread_count);
+    // inicializamos para la primera iteracion del while de update_lamina
+    public_data->unstable_blocks = 1;
+    public_data->estados = 0;
+    public_data->temp = NULL;
         for (size_t i = 0; i < thread_count; i++) {
             // si algo falla liberamos toda la memoria reservada
-            if (pthread_create(&threads[i], NULL, update_lamina_block,
+            private_data[i].thread_num = i;
+            private_data[i].public_data = public_data;
+            if (pthread_create(&threads[i], NULL, update_lamina,
                 &private_data[i]) != 0) {
                 error_manager(lamina, fileobj, "Error: pthread_create falló");
                 free(threads);
@@ -293,39 +290,74 @@ int update_lamina(Lamina * lamina, file_struct *fileobj,
                 return EXIT_FAILURE;
             }
         }
-        // ciclo para el threads_join y recopilacion de cuantos bloques
-        // no estables existen aun
-        for (size_t i = 0; i < public_data->thread_count; i++) {
-            pthread_join(threads[i], NULL);
-            unstable_blocks += private_data[i].unstable_cells;
-        }
-        // swap de las matrices
-        temp = lamina->temperatures;
-        lamina->temperatures = lamina->next_temperatures;
-        lamina->next_temperatures = temp;
-        printf("Estado: %d\n", estados);
-        //lamina->k += lamina->time;
+    // for para destruir todos los hilos creados
+    for(size_t i = 0; i < thread_count; i++) {
+        pthread_join(threads[i], NULL);
     }
-    // una vez terminado el trabajo de los threads, liberamos la memoria
-    // reservada
+    // liberamos toda la memoria relacionada a los threads
     free(threads);
     free(private_data);
-    printf("Estado: %d\n", estados);
-    lamina->k = estados;
-    lamina->time *= lamina->k;
-    printf("Lamina estabilizada: \n");
-    print_lamina(lamina);
-
+    int return_value = 0;
     return_value = finish_simulation(lamina, fileobj);
     if (return_value == EXIT_FAILURE) {
         printf("[ERROR] finish_simulation falló\n");
         return EXIT_FAILURE;
     }
+    printf("\n\n");
+    printf("Estado: %zu\n\n", public_data->estados);
+    lamina->k = public_data->estados;
+    lamina->time *= lamina->k;
+    printf("Lamina estabilizada: \n");
+    print_lamina(lamina);
     return EXIT_SUCCESS;
 }
-void* update_lamina_block(void* data) {
+
+void* update_lamina(void *data) {
     assert(data);
     private_data_t *private_data = (private_data_t*) data;
+    while (1) {
+        // actualizar el bloque correspondiente a cada hilo
+        update_lamina_block(private_data);
+        
+        if (pthread_barrier_wait(&private_data->public_data->barrier) ==
+            PTHREAD_BARRIER_SERIAL_THREAD) {
+                // incrementamos estados una vez por iteracion
+            private_data->public_data->estados++;
+            // reseteamos los bloques inestables para la siguiente iteracion
+            private_data->public_data->unstable_blocks = 0;
+        }
+        pthread_barrier_wait(&private_data->public_data->barrier);
+        pthread_mutex_lock(&private_data->public_data->can_add_unstable_blocks);
+            private_data->public_data->unstable_blocks +=
+                private_data->unstable_cells;
+        pthread_mutex_unlock(&private_data->public_data->
+            can_add_unstable_blocks);
+        if (pthread_barrier_wait(&private_data->public_data->barrier) ==
+            PTHREAD_BARRIER_SERIAL_THREAD) {
+            // swap de las matrices
+            private_data->public_data->temp =
+                private_data->public_data->lamina->temperatures;
+            private_data->public_data->lamina->temperatures =
+                private_data->public_data->lamina->next_temperatures;
+            private_data->public_data->lamina->next_temperatures =
+                private_data->public_data->temp;
+            printf("Estado: %zu\n", private_data->public_data->estados);
+        }
+        pthread_barrier_wait(&private_data->public_data->barrier);
+        //printf("THREAD: %zu\t Estado: %zu\n", private_data->thread_num, private_data->public_data->estados);
+        // condicion de parada
+        pthread_mutex_lock(&private_data->public_data->can_add_unstable_blocks);
+        int should_stop = (private_data->public_data->unstable_blocks == 0);
+        pthread_mutex_unlock(&private_data->public_data->can_add_unstable_blocks);
+
+        if (should_stop) {
+            break;
+        }
+    }
+    return NULL;
+}
+
+void update_lamina_block(private_data_t* private_data) {
     size_t x_increment = private_data->public_data->x_increment;
     size_t y_increment = private_data->public_data->y_increment;
     // Dividir solo por filas (x), no por columnas
@@ -337,23 +369,10 @@ void* update_lamina_block(void* data) {
     
     private_data->y1 = 0;
     private_data->y2 = private_data->public_data->lamina->columns;
-    
-
-    
-    /*
-    private_data->y1 = private_data->thread_num * y_increment;
-    private_data->y2 = (private_data->thread_num ==
-        private_data->public_data->thread_count - 1)
-        ? private_data->public_data->lamina->columns
-        : (private_data->thread_num + 1) * y_increment;
-
-    */
-    //printf("THREAD: %zu\t X1: %zu\t X2: %zu\t Y1: %zu\t Y2: %zu\n",
-    //    private_data->thread_num, private_data->x1, private_data->x2,
-    //        private_data->y1, private_data->y2);
     size_t unstable_cells = 0;
     // recorrido del bloque correspondiente de cada hilo, que ignora los bordes
     // pues estos son constantes
+    
     for (size_t i = private_data->x1; i < private_data->x2; i++) {
         for (size_t j = private_data->y1; j < private_data->y2; j++) {
             if (i == 0 || i == private_data->public_data->lamina->rows - 1 ||
@@ -368,7 +387,7 @@ void* update_lamina_block(void* data) {
         }
     }
     private_data->unstable_cells = unstable_cells;
-    return NULL;
+    return;
 }
 void update_cell(Lamina * lamina, size_t row, size_t column,
     size_t *unstable_cells) {
@@ -402,6 +421,7 @@ int finish_simulation(Lamina * lamina, file_struct *fileobj) {
     return EXIT_SUCCESS;
 }
 void print_lamina(Lamina* lamina) {
+    return;
     printf("Matriz de temperaturas:\n");
     for (uint64_t i = 0; i < lamina->rows; i++) {
         for (uint64_t j = 0; j < lamina->columns; j++) {

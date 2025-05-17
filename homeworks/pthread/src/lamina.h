@@ -1,11 +1,14 @@
 // Copyright 2025 Anthony Sanchez
 #ifndef HOMEWORKS_SERIAL_SRC_LAMINA_H_
 #define HOMEWORKS_SERIAL_SRC_LAMINA_H_
+#define _POSIX_C_SOURCE 200112L
 #include "FileManager.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <pthread.h>
 #include <time.h>
+
 /**
  * @struct Lamina
  * @brief Estructura que representa una lámina térmica en la simulación.
@@ -56,6 +59,12 @@ typedef struct {
     size_t y_increment;   /**< Cantidad de filas que debe procesar cada hilo. */
     size_t thread_count;  /**< Número total de hilos en ejecución. */
     Lamina* lamina;       /**< Puntero a la estructura lamina */
+    // mutex para modificar swap_matrix y unstable_blocks
+    pthread_mutex_t can_add_unstable_blocks;
+    pthread_barrier_t barrier; /* barrera para sincronizar los hilos*/
+    size_t estados; /* cantidad de estados transcurridos*/
+    size_t unstable_blocks; /*cantidad de bloques de la matriz inestables*/
+    double **temp; /*puntero para el swap de matrices*/
 } public_data_t;
 /**
  * @brief Estructura de datos privados de cada hilo.
@@ -145,6 +154,15 @@ int fillMatriz(Lamina * lamina, file_struct* fileobj);
 void plan_thread_distribution(Lamina *lamina,
     public_data_t* public_data);
 /**
+ * @brief Funcion encargada de crear y destruir todos los hilos
+ * 
+ * @param lamina Puntero al struct lamina
+ * @param fileobj Puntero al struct encargado del manejo de archivos
+ * @param public_data Puntero al struct de datos compartidos entre hilos
+ */
+int starThreads(Lamina *lamina, file_struct *fileobj,
+    public_data_t* public_data);
+/**
  * @brief Actualiza la matriz de temperaturas hasta estabilizarla
  * 
  * Recorre la matriz de temperaturas, actualizando cada celda hasta que todas
@@ -161,8 +179,15 @@ void plan_thread_distribution(Lamina *lamina,
  * @note Si la simulación falla al finalizar, la función devuelve
  * `EXIT_FAILURE`.
  */
-int update_lamina(Lamina *lamina, file_struct *fileobj,
-    public_data_t* public_data);
+/**
+ * @brief Funcion encargada de iniciar y destruir todos los threads una sola vez
+ * 
+ * @param lamina Puntero a la estructura lamina
+ * @param fileobj Puntero al struct encargado del manejo de archivos
+ * @param public_data Puntero al struct de datos compartidos
+ * @return EXIT_SUCCESS si no hubo fallos, EXIT_FAILURE en el caso contrario
+ */
+void* update_lamina(void* data);
 /**
  * @brief Funcion que actualiza el bloque de la matriz correspondiente a cada
  * hilo
@@ -171,9 +196,9 @@ int update_lamina(Lamina *lamina, file_struct *fileobj,
  * x2, y2 son excluyentes, de manera en que nunca existen dos hilos que
  * modifiquen la misma celda, evitando condiciones de carrera o similar
  * 
- * @param data Aqui se encuentra el puntero al struct privado de cada hilo
+ * @param private_data Puntero al struct privado de cada hilo
  */
-void* update_lamina_block(void *data);
+void update_lamina_block(private_data_t* private_data);
 /**
  * @brief Actualiza la temperatura de la celda recibida.
  * 
