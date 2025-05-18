@@ -64,6 +64,10 @@ typedef struct {
     size_t estados; /* cantidad de estados transcurridos*/
     size_t unstable_blocks; /*cantidad de bloques de la matriz inestables*/
     size_t total_cells;
+    size_t current_offset;
+    size_t next_offset;
+    void* private_data_array;
+
 } public_data_t;
 /**
  * @brief Estructura de datos privados de cada hilo.
@@ -80,6 +84,7 @@ typedef struct {
     size_t thread_num;           /**< Número o identificador del hilo. */
     size_t unstable_cells;       /**< Numero de celdas inestables por bloque */
     size_t index;
+    size_t current_index;
     size_t next_index;
     public_data_t* public_data;  /**< Puntero a la estructura de datos publica*/
 } private_data_t;
@@ -200,7 +205,7 @@ void* update_lamina(void* data);
  * @param private_data Puntero al struct privado de cada hilo
  */
 void update_lamina_block(Lamina* lamina, private_data_t* private_data,
-    size_t current_index, size_t next_index, size_t current_offset,
+    size_t current_offset,
     size_t next_offset);
 /**
  * @brief Actualiza la temperatura de la celda recibida.

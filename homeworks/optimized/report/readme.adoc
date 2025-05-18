@@ -23,7 +23,7 @@
 [[serial_iter00]]
 === Versión serial original (Tarea01)
 La version serial00 contaba con dos matrices double [][] para manejar las
-temperaturas actuales y las del siguiente estado.
+temperaturas actuales y las del siguiente estado, lo cual era bastante ineficiente por el tema de accessos a dichas matrices y el cambio de punteros tan grandes.
 
 
 [[serial_iter01]]
@@ -62,15 +62,15 @@ double* temperatures = malloc(2 * rows * columns * sizeof(double));
 ----
 
 [[concurrent_optimizations]]
-== Optimizaciones concurrentes
+== Optimizaciones concurrentes (con 4 hilos)
 
 [%autowidth.stretch,options="header"]
 |===
 |Iter. |Etiqueta |Duración (s) |_Speedup_ |Eficiencia |Descripción corta
 |- |SerialI |45.551 |1.00 |Versión serial final
 |1 |Conc0 |740.903 |0.06 |1.54% |Versión concurrente inicial (Tarea02)
-|2 |Conc01 |377.649 |0.12 |3.01% |
-|3 | | | | |Versión concurrente final
+|2 |Conc01 |195.611 |0.23 |5.82% |Version con barreras para los threads
+|3 |Conc02 |106.513 |0.42 |10.69% |Versión con menor control de concurrencia
 |===
 
 
@@ -143,16 +143,98 @@ funcion update_lamina() {
     }
 }
 ----
+
+[[conc_iter02]]
 === Iteración 2
+Para la ultima optimizacion se observo que existia mucho control de concurrencia
+en la primera optimizacion de tarea02, en consecuencia se eliminaron mutexes y
+barreras inecesarias.
+
+==== Antes
+[source,c]
+----
+void* update_lamina(void *data) {
+    ...
+    while (1) {
+        ...
+        update_lamina_block(lamina, private_data, current_offset, next_offset);
+        if (pthread_barrier_wait(&barrier) == PTHREAD_BARRIER_SERIAL_THREAD) {
+            ...
+            ...
+            ...
+        }
+        pthread_barrier_wait(&barrier);
+
+        pthread_mutex_lock(&can_add_unstable_blocks);
+        ...
+        ...
+        ...
+        pthread_mutex_unlock(&can_add_unstable_blocks);
+
+        if (pthread_barrier_wait(&barrier) == PTHREAD_BARRIER_SERIAL_THREAD) {
+            ...
+            ...
+            ...
+        }
+        pthread_barrier_wait(&barrier);
+
+        pthread_mutex_lock(&can_add_unstable_blocks);
+        ...
+        ...
+        ...
+        pthread_mutex_unlock(&can_add_unstable_blocks);
+
+        if (should_stop) break;
+    }
+    ...
+}
+----
+
+=== Después (sin mutexes, con solo dos barreras)
+
+[source,c]
+----
+void* update_lamina(void *data) {
+    ...
+    while (1) {
+        size_t my_unstable = update_lamina_block(...);
+
+        if (pthread_barrier_wait(&barrier) == PTHREAD_BARRIER_SERIAL_THREAD) {
+            ...
+            ...
+            ...
+        }
+        pthread_barrier_wait(&barrier);
+
+        __sync_fetch_and_add(&unstable_blocks, my_unstable);
+
+        if (pthread_barrier_wait(&barrier) == PTHREAD_BARRIER_SERIAL_THREAD) {
+            ...
+            ...
+            ...
+        }
+        pthread_barrier_wait(&barrier);
+
+        if (stop) break;
+    }
+    ...
+}
+----
 
 [[optimization_comparison]]
 === Comparación de optimizaciones
 
-(pendiente)
+La versión serial original tomaba 70.909 segundos, mientras que la versión final optimizada reduce ese tiempo a 45.551 segundos gracias al uso de un solo arreglo lineal para las temperaturas. Esta mejora ofrece un speedup de 1.55x.
 
+
+---
 
 [[concurrency_comparison]]
 === Comparación del grado de concurrencia
 
-(pendiente)
+En el caso concurrente, la versión inicial (Conc0) presentaba un desempeño muy deficiente con un tiempo de 740.903 segundos, debido a la creación y destrucción de hilos en cada iteración. En la primera mejora (Conc01), los hilos se mantuvieron vivos durante toda la ejecución y se introdujeron barreras para sincronizar las iteraciones, reduciendo el tiempo a 195.611 segundos (speedup ≈ 0.23x).
 
+Finalmente, en la segunda optimización concurrente (Conc02), se eliminaron mutexes y se redujeron las barreras innecesarias, logrando una mayor eficiencia. Esta versión alcanzó un tiempo de 106.513 segundos (speedup ≈ 0.42x). Aunque aún no supera a la versión serial final, representa un avance significativo frente a las versiones concurrentes anteriores.
+
+== Comparativa visual de las optimizaciones
+image:../design/Duracion frente a Iteracion.svg[]
