@@ -1,0 +1,20 @@
+// Estructura de datos compartidos
+Estructura SharedFileData:
+    Cadena base_route[256]
+    Cadena binary_file_name[256]
+    Puntero a archivo file
+    Puntero a archivo report_file
+
+// Estructura Lamina
+Estructura Lamina:
+    // Detalles de la estructura Lamina
+
+// Función para generar un reporte
+Función report_file(Lamina *lamina, SharedFileData *file_obj):
+    Abrir report_file
+    Escribir datos de lamina
+    Cerrar report_file
+    Retornar éxito
+
+// Función para eliminar archivos
+Función delete_files(SharedFileData *fileobj):

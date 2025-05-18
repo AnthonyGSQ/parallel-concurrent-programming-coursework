@@ -1,0 +1,102 @@
+= Reporte de optimizaciones
+:toc-title: Tabla de contenidos
+:experimental:
+:nofooter:
+:source-highlighter: pygments
+:sectnums:
+:stem: latexmath
+:toc:
+:xrefstyle: short
+
+[[descripcion del problema]]
+
+== Descripcion del problema
+
+Se debe crear una simulación que ayude a encontrar el momento de equilibrio térmico de una lámina RxC (R número de columnas y C número de filas), la cual recibe calor constante por el borde.
+
+Estas láminas serán matrices donde cada celda almacena una temperatura, la cual cambia según el estado k y la temperatura de las celdas cercanas (arriba, abajo, izquierda, derecha). La temperatura actual será la suma de las 4 celdas adyacentes.
+La formula utilizada para actualizar las celdas es:
+[stem]
+++++
+T_{i,j}^{k+1} = T_{i,j}^k + \frac{\Delta t \cdot \alpha}{h^2} (T_{i-1,j}^k + T_{i,j+1}^k + T_{i+1,j}^k + T_{i,j-1}^k - 4T_{i,j}^k)
+++++
+
+Además, cada celda puede perder temperatura, distribuyéndola en las 4 celdas adyacentes. La transferencia depende del área que recorre (tamaño de la celda). A medida que pasa el tiempo, más calor se transfiere a las celdas adyacentes. La cantidad de energía intercambiada dependerá de la calidad conductora de la lámina.
+
+El programa finaliza cuando se alcanza el punto de equilibrio térmico. Este se calcula a partir de un parámetro epsilon, que representará el mínimo cambio de temperatura significativo. Si una sola de las celdas tiene un cambio de temperatura mayor a epsilon, la simulación debe continuar.
+
+La diferencia a comparar con epsilon de cada celda será la resta del valor en el estado k y el valor en el estado k+1, donde:
+
+* Estado k: estado de la lámina transcurridos 0 minutos.
+* Estado k+1: estado de la lámina transcurridos 20 minutos.
+
+#Si el valor más grande de toda la lámina es menor a epsilon, el programa finalizará.#
+
+=== Uso de Pthreads para la solucion
+
+Para aprovechar al maximo el rendimiento del uso de threads en el recorrido de la matriz, hay que tomar en cuenta el overhead, no es rentable utilizar m threads para una matriz con n celdas si m > n/2, ya que el crear hilos tiene su coste computacional.
+
+En consecuencia, se toma como parametro de celdas minimas a procesar por hilo, el valor 100, es decir si se recibe una lamina con menos de 100 celdas, no se considera la idea de crear hilos pues afectaria el rendimiento mas que mejorarlo. Caso contrario si se recibe una matriz de mas de 100 celdas, se considera el caso de utilizar hilos, eso si, limitando la cantidad de hilos en caso de que esta sea demaciado grande para la lamina a procesar, ejemplo:
+
+- Una matriz 20x10 (200 celdas) y una solicitud del usuario de usar 1000 hilos
+- Debido a la cantidad ridicula de hilos solicitados para una matriz tan pequena, se limitarian los hilos a dos.
+
+Con respecto a la division de celdas para la matriz es simple, se divide la cantidad de filas entre los hilos de la manera mas equitativa posible, en caso de no ser una division exacta, las filas no asignadas las procesara el ultimo hilo. Por ejemplo:
+
+- Lamina 21x10 (200 celdas), solicitud de 2 hilos.
+
+Serian veintiun filas divididas entre dos hilos, es decir 10 filas cada hilo, sobrando la fila veintiuno, al ser una fila sobrante, sera procesada por el ultimo hilo.
+En este caso el hilo uno procesaria las filas desde la primera hasta la fila nueve y el segundo hilo procesaria desde la fila diez hasta la fila veintiuno para dar un total de 21 filas procesadas.
+
+=== Optimizacion de Tarea01 y Tarea02
+
+En busqueda de una reduccion significativa de la duracion de la simulacion *(sobre todo con laminas grandes y dificiles de estabilizar)*, se busca optimizar el trabajo realizado en Tarea01 y Tarea02, eliminando codigo redundante, aprovechando mejor la memoria y realizando un mejor manejo de hilos.
+Esta tarea es la union de las optimizaciones de Tarea01 y Tarea02, asegurando el maximo rendimiento de entre las tres.
+
+[[manual]]
+
+== Manual del usuario
+
+=== Build
+
+1. Instalar dependencias:
+- Asegúrate de tener instalados todos los paquetes necesarios:
+
+[source, bash]
+---
+ make instdeps
+---
+
+=== Guía de Uso
+
+1. Compilar el Proyecto:
+- Navega a la carpeta `serial` y compila con `make`
+De esta manera se creara el ejecutable en la carpeta bin.
+Una vez compilado el proyecto, puedes ejecutarlo usando el siguiente comando:
+[source, bash]
+----
+./bin/serial ./jobs/job###/job###.txt
+----
+
+Donde ### es el número del job a utilizar en el programa. Ejemplo:
+[source, bash]
+----
+./jobs/job001b/job002.txt
+----
+
+En caso de querer probar el programa inmediatamente, puedes utilizar el siguiente comando:
+[source, bash]
+---
+make clean run
+---
+
+Esto correra el programa tomando como archivo el job002b/job002.txt para procesar.
+
+[[creditos]]
+== Creditos
+
+Creditos a Jeisson Hidalgo-Céspedes, pues fue quien brindo el make y la guia de como realizar este proyecto.
+
+https://jeisson.ecci.ucr.ac.cr/concurrente/2025a/tareas/#pthread[Link al enunciado original de la tarea]
+
+Creditos a Anthony Sanchez Quiros por la realizacion de todo el codigo de este programa.
