@@ -12,13 +12,11 @@
 
 [[serial_optimizations]]
 == Optimizaciones seriales
-IMPORTANTE: medidas temporales tomadas de job003, solo para ver si existe una mejoria de rendimiento o no
 [%autowidth.stretch,options="header"]
 |===
 |Iter. |Etiqueta |Duración (s) |_Speedup_ |Descripción corta
 |0 |Serial0 |139.642 |1.00 |Versión serial inicial (Tarea01)
-|1 |Serial1 |126.431 |1.105 |
-|2 | | | |
+|1 |Serial1 |126.431 |1.105 |Uso de array en lugar de matrices
 |===
 
 
@@ -79,13 +77,72 @@ double* temperatures = malloc(2 * rows * columns * sizeof(double));
 [[conc_iter00]]
 === Versión concurrente inicial (Tarea02)
 
-#Describa aquí qué aspectos tenía la versión concurrente (Tarea02) no eficientes que podrían o fueron opitimizados luego. También aspectos que usted considera eficientes, los cuales explicarían por qué no amerita una optimización.#
+La version original de Tarea02 tenia un problema muy serio con respecto a la optimizacion, pues creaba y destruia los registros privados y los hilos en cada cambio de estado de la lamina, generando un overhead muy alto
 
 [[conc_iter01]]
 === Iteración 1
 
-#Para cada iteración del ciclo de optimización, cree una subsección como esta. Resuma en máximo un párrafo en qué consiste la optimización. Su objetivo es que quien lea este documento entienda claramente qué se intentó mejorar. Provea trocitos de código fuente o pseudocódigo que ayude a entender la optimización potencial. Indique si el intento logró incrementar el desempeño. En caso de no lograrlo, conjeture la causa. Eso ayudaría a ahorrar tiempo a otras personas que tengan la misma inquietud.#
+La primera optimizacion de la Tarea02 busco disminuir el overhead de la creacion y destruccion de hilos. Dicho proceso se realizaba dentro del while que cambiaba de estado k a estado k+1. Ahora se crean y destruyen los hilos una unica vez, utilizando barreras para el while que itera los estados, reduciendo significativamente el overhead de la creacion y destruccion de hilos, aumentando el rendimiento.
 
+==== Antes:
+[source, bash]
+----
+funcion update_lamina() {
+    ...
+    ...
+    ...
+    while (unstable blocks > 0) {
+        ...
+        ...
+        ...
+        for (size_t i = 0; i < thread_count; i++) {
+            pthread_create(&threads[i], NULL, update_lamina_block,
+            &private_data[i]) != 0);
+        }
+        ...
+        ...
+        ...
+        for (size_t i = 0; i < thread_count; i++) {
+            pthread_join(threads[i]);
+        }
+        ...
+        ...
+        ...
+    }
+}
+----
+
+==== Despues:
+[source, bash]
+----
+funcion starThreads() {
+    ...
+    ...
+    ...
+    for (size_t i = 0; i < thread_count; i++) {
+            pthread_create(&threads[i], NULL, update_lamina,
+            &private_data[i]) != 0);
+    }
+    ...
+    ...
+    ...
+    for (size_t i = 0; i < thread_count; i++) {
+            pthread_join(threads[i]);
+    }
+}
+funcion update_lamina() {
+    while(true) {
+        ...
+        ...
+        ...
+        update_lamina_block()
+        ...
+        ...
+        ...
+        pthread_barrier_wait(&private_data->public_data->barrier);
+    }
+}
+----
 === Iteración 2
 
 [[optimization_comparison]]
