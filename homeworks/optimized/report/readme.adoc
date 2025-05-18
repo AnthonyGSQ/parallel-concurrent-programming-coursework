@@ -67,9 +67,9 @@ double* temperatures = malloc(2 * rows * columns * sizeof(double));
 [%autowidth.stretch,options="header"]
 |===
 |Iter. |Etiqueta |Duración (s) |_Speedup_ |Eficiencia |Descripción corta
-|- |SerialI | |1.00 |1.00 |Versión serial final
-|1 |Conc0 | | | |Versión concurrente inicial (Tarea02)
-|2 | | | | |
+|- |SerialI |45.551 |1.00 |Versión serial final
+|1 |Conc0 |740.903 |0.06 |1.54% |Versión concurrente inicial (Tarea02)
+|2 |Conc01 |377.649 |0.12 |3.01% |
 |3 | | | | |Versión concurrente final
 |===
 
