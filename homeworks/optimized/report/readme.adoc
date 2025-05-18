@@ -22,8 +22,8 @@
 
 [[serial_iter00]]
 === Versión serial original (Tarea01)
-La version serial00 contaba con dos matrices double [][] para manejar las
-temperaturas actuales y las del siguiente estado, lo cual era bastante ineficiente por el tema de accessos a dichas matrices y el cambio de punteros tan grandes.
+La version serial00 contaba con dos matrices double [rows][columns] para manejar las
+temperaturas actuales y las del siguiente estado, lo cual era bastante ineficiente por el tema de accesos a dichas matrices y el cambio de punteros tan grandes.
 
 
 [[serial_iter01]]
@@ -67,7 +67,7 @@ double* temperatures = malloc(2 * rows * columns * sizeof(double));
 [%autowidth.stretch,options="header"]
 |===
 |Iter. |Etiqueta |Duración (s) |_Speedup_ |Eficiencia |Descripción corta
-|- |SerialI |45.551 |1.00 |Versión serial final
+|- |SerialI |45.551 |1.00 |--- |Versión serial final
 |1 |Conc0 |740.903 |0.06 |1.54% |Versión concurrente inicial (Tarea02)
 |2 |Conc01 |195.611 |0.23 |5.82% |Version con barreras para los threads
 |3 |Conc02 |106.513 |0.42 |10.69% |Versión con menor control de concurrencia

@@ -179,7 +179,7 @@ int create_lamina(Lamina *lamina, file_struct* fileobj,
             return EXIT_FAILURE;
     }
     return_value = fillMatriz(lamina, fileobj);
-    if(return_value == EXIT_FAILURE) {
+    if (return_value == EXIT_FAILURE) {
         return EXIT_FAILURE;
     }
     plan_thread_distribution(lamina, public_data);
@@ -189,7 +189,7 @@ int create_lamina(Lamina *lamina, file_struct* fileobj,
 int fillMatriz(Lamina *lamina, file_struct* fileobj) {
     for (size_t i = 0; i < lamina->rows; i++) {
         for (size_t j = 0; j < lamina->columns; j++) {
-            // calculamos el indice 
+            // calculamos el indice
             size_t index = i * lamina->columns + j;
             if (fread(&lamina->temperatures[index], sizeof(double), 1,
             fileobj->file) != 1) {
@@ -240,7 +240,7 @@ int starThreads(Lamina *lamina, file_struct *fileobj,
     // creamos thread_count structs para cada hilo
     private_data_t* private_data = calloc(thread_count, sizeof(private_data_t));
     // si no se pudieron crear, retorna EXIT_FAILURE
-    if(!private_data) {
+    if (!private_data) {
         error_manager(lamina, fileobj,
             "Error: could not make calloc for private_data");
         return EXIT_FAILURE;
@@ -277,7 +277,7 @@ int starThreads(Lamina *lamina, file_struct *fileobj,
             }
         }
     // for para destruir todos los hilos creados
-    for(size_t i = 0; i < thread_count; i++) {
+    for (size_t i = 0; i < thread_count; i++) {
         pthread_join(threads[i], NULL);
     }
     // liberamos toda la memoria relacionada a los threads
@@ -313,15 +313,11 @@ int starThreads(Lamina *lamina, file_struct *fileobj,
         int is_serial = pthread_barrier_wait(&public_data->barrier);
 
         if (is_serial == PTHREAD_BARRIER_SERIAL_THREAD) {
-            // Solo hilo serial acumula unstable_blocks sumando todos los unstable_cells locales
             public_data->estados++;
             size_t total_unstable = 0;
-
-            // Acceder a private_data de todos hilos: 
-            // Suponemos que private_data es un array global o accesible (debes asegurarte).
-            // Si no, necesitarías alguna estructura global que los contenga.
             for (size_t i = 0; i < thread_count; i++) {
-                total_unstable += ((private_data_t*)public_data->private_data_array)[i].unstable_cells;
+                total_unstable += ((private_data_t*)public_data->
+                private_data_array)[i].unstable_cells;
             }
 
             public_data->unstable_blocks = total_unstable;
@@ -332,7 +328,8 @@ int starThreads(Lamina *lamina, file_struct *fileobj,
             public_data->next_offset = temp;
         }
 
-        // Segunda barrera: asegurar que todos ven updated unstable_blocks y offsets
+        // Segunda barrera: asegurar que todos ven updated unstable_blocks y
+        // offsets
         pthread_barrier_wait(&public_data->barrier);
 
         // Condición de parada evaluada sin mutex (lectura simple)
@@ -355,7 +352,6 @@ void update_lamina_block(Lamina* lamina, private_data_t* private_data,
         private_data->public_data->thread_count - 1)
         ? private_data->public_data->lamina->rows
         : (private_data->thread_num + 1) * x_increment;
-    
     private_data->y1 = 0;
     private_data->y2 = private_data->public_data->lamina->columns;
     // recorrido del bloque correspondiente de cada hilo, que ignora los bordes
@@ -372,14 +368,11 @@ void update_lamina_block(Lamina* lamina, private_data_t* private_data,
                 lamina->temperatures[private_data->current_index];
                 continue;
             }
-            //printf("THREAD %zu: (%zu,%zu)\n", private_data->thread_num, i, j);
             lamina->temperatures[private_data->next_index] = 0;
                 update_cell(lamina, i, j, lamina->temperatures + current_offset,
             lamina->temperatures + next_offset, &private_data->unstable_cells);
         }
     }
-    //printf("Thread %zu encontró %zu celdas inestables\n",
-    //   private_data->thread_num, private_data->unstable_cells);
     return;
 }
 /**

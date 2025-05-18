@@ -67,7 +67,6 @@ typedef struct {
     size_t current_offset;
     size_t next_offset;
     void* private_data_array;
-
 } public_data_t;
 /**
  * @brief Estructura de datos privados de cada hilo.
