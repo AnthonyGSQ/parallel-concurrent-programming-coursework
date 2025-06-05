@@ -54,6 +54,20 @@ overflows and underflows.
 exercise addresses the unbounded buffer problem, where producer and consumer
 threads interact with a buffer that can grow dynamically, requiring
 synchronization but without the constraint of a fixed size.
+|18 |link:pthreads/prod_cons_unbound_cpp[prod_cons_unbound] | Homework | Producer-consumer problem with an unbounded buffer implemented in C++.
+|19 |link:taskc/network_simul_packet_loss[network_simul_packet_loss] | Class Example | Simulates network packet loss in a concurrent environment.
+|20 |link:taskc/network_simul_packet_loss2[network_simul_packet_loss2] | Class Example | Variation of the network packet loss simulation.
+|21 |link:taskc/network_simul_producers[network_simul_producers] | Class example | Simulates multiple producers in a network environment.
+|22 |link:taskc/network_simul_bounded[network_simul_bounded] | Class example | Simulates a bounded network buffer with concurrent producers and consumers.
+|23 |link:datap/amdahl_compare_ab[amdahl_compare_ab] | Homework | Compares speedup using Amdahl's Law.
+|24 |link:taskc/taskc_patterns[taskc_patterns] | Class Example | Examples of common concurrency patterns.
+|25 |link:openmp/omp_team[omp_team] | Class example | Example of team parallelism using OpenMP.
+|26 |link:openmp/omp_for[omp_for] | Class example | Example of parallel for loops using OpenMP.
+|26 |link:openmp/omp_several_for_stages[omp_several_for_stages] | Class example | Example of multiple parallel for stages with OpenMP.
+|27 |link:openmp/omp_mergesort[omp_mergesort] | Class example | Parallel mergesort implementation using OpenMP.
+|28 |link:openmp/omp_stats[omp_stats] | Class example | Statistical computations using OpenMP parallelism.
+|29 |link:mpi/mpi_hello[mpi_hello] | Class example | Basic MPI hello world example.
+|30 |link:mpi/wrapper[mpi_wrapper] | Class example | C++ wrapper class for MPI initialization and management.
 |===
 
 == Tasks
@@ -63,6 +77,7 @@ synchronization but without the constraint of a fixed size.
 |# |Id |Type |Description
 |1 |link:homeworks/serial[serial] | Tarea01 | Program that stabilizes the temperatures of an n x m sheet, processing one cell of the sheet at a time
 |2 |link:homeworks/pthread[pthread] | Tarea02 | Program that stabilizes the temperatures of an n x m sheet, processing multiple cells of the sheet at the same time.
+|3 |link:homeworks/optimized[optimided] | Tarea03 | Program that stabilizes the temperatures of an n x m sheet, processing multiple cells of the sheet at the same time, but with a more efficient algorithm than pthread homework version.
 |===
 
 == Glosary
@@ -130,15 +145,32 @@ Herramienta de control de concurrencia que evita que mas de un hilo acceda a x d
 Herramienta de control de concurrencia que le permite a n hilos poder realizar x actividad a la vez, enviando un signal cada que el semaforo vacia uno de los espacios que tiene disponibles, permmitiendole a otros hilos acceder a x actividad.
 
 === Barrera
+
+Herramienta de control de concurrencia que permite poner en espera a n hilos hasta que todos hayan llegado al mismo punto, sin necesidad de una espera activa.
 === Variable de condicion
+
+Es una herramienta de control de concurrencia que permite a los hilos esperar hasta que se cumpla una condicion especifica, permitiendo que otros hilos puedan modificar el estado de la condicion y notificar a los hilos en espera.
+
 === Candado de lectura y escritura
 === Descomposicion
 
 Se refiere a la separacion de un trabajo en multiples tareas, facilitando el uso de concurrencia.
 
 === Mapeo
+
+Se refiere a la asignacion de tareas a hilos, permitiendo que cada hilo realice una tarea especifica.
+
 === Incremento de velocidad
+
+Se refiere a la mejoria en la cantidad de tiempo requerido para la finalizacion de un programa
+
 === Eficiencia
+
+Es la relacion entre el tiempo de ejecucion de un programa tomando en cuenta la cantidad
+de hilos utilizados y el tiempo de ejecucion del programa tomando en cuenta un solo hilo.
+
 === Comunicacion punto a punto entre procesos
 === Comunicacion colectiva entre procesos
 === Reduccion
+
+Se refiere a la operacion de combinar los resultados de varios procesos en un solo resultado, por ejemplo, sumar los resultados de varios hilos en un solo resultado.
