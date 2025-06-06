@@ -1,2 +1,2 @@
 GITUSER=Anthony Sanchez
-GITMAIL= anthony.sanchezquiros@ucr.ac.cr
+GITEMAIL= anthony.sanchezquiros@ucr.ac.cr
