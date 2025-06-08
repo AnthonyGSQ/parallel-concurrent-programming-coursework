@@ -65,13 +65,13 @@ En este caso el hilo uno procesaria las filas desde la primera hasta la fila nue
 === Guía de Uso
 
 1. Compilar el Proyecto:
-- Navega a la carpeta `serial` y compila con `make`
+- Navega a la carpeta `pthread` y compila con `make`
 De esta manera se creara el ejecutable en la carpeta bin.
 Una vez compilado el proyecto, puedes ejecutarlo usando el siguiente comando:
 
 [source, bash]
 ----
-./bin/serial ./jobs/job###/job###.txt
+./bin/pthread ./jobs/job###/job###.txt
 ----
 
 Donde ### es el número del job a utilizar en el programa. Ejemplo:
@@ -95,7 +95,7 @@ Cada archivo txt cuenta con varias placas para ser procesadas, en este readme se
 
 [source, bash]
 ---
-./bin/serial ./jobs/job002b/job002.txt
+./bin/pthread ./jobs/job002b/job002.txt
 ---
 
 Laminas leidas:
