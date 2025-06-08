@@ -238,3 +238,17 @@ Finalmente, en la segunda optimización concurrente (Conc02), se eliminaron mute
 
 == Comparativa visual de las optimizaciones
 image:../design/Duracion frente a Iteracion.svg[]
+
+A continuacion se presenta una tabla con multiples pruebas utilizando la primera lamina del job20
+[%autowidth.stretch,options="header"]
+|===
+|Iter. |Etiqueta |Duración (s) |_Speedup_ |Eficiencia |Descripción corta
+|1* |S |540.319 |1.00 |100% |Version serial final
+|2 |1 |737.040 |0.73 |73.31% |Un solo hilo
+|3 |hC |467.901 |1.15 |57.72% |Mitad de hilos de la computadora (2)
+|4* |1C |435.095 |1.24 |30.99% |Tantos hilos como CPUs hay en la computadora (4)
+|5 |2C |425.520 |1.27 |15.85% |Dos hilos por cada CPU que hay en la computadora (8)
+|6 |4C |433.872 |1.24 |7.79% |Cuatro hilos por cada CPU que hay en la computadora (16)
+|===
+
+image:../design/ Duracion frente a iteracion job20.svg[job20comparation]

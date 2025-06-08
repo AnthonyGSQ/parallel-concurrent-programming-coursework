@@ -20,12 +20,21 @@
  * parámetros a utilizar
  */ 
 typedef struct Lamina {
+    /**
+     * @brief cantidad de filas de la lamina
+     */
     uint64_t rows;
+    /**
+     * @brief cantidad de columnas de la lamina
+     */
     uint64_t columns;
     /**
      * @brief El valor de k utilizado en la simulación.
      */
     double k;
+    /**
+     * tiempo transcurrido en la simulacion
+     */
     double time;
     /**
      * @brief Conductividad térmica del material.
@@ -42,7 +51,13 @@ typedef struct Lamina {
      * cuando las temperaturas ya no cambian significativamente entre pasos.
      */
     double thread_count;
+    /**
+     * @brief parametro usado para verificar si una celda esta estabilizada
+     */
     double epsilon;
+    /**
+     * @brief matriz de temperaturas
+     */
     double *temperatures;
 } Lamina;
 /**
@@ -63,10 +78,10 @@ typedef struct {
     pthread_barrier_t barrier; /* barrera para sincronizar los hilos*/
     size_t estados; /* cantidad de estados transcurridos*/
     size_t unstable_blocks; /*cantidad de bloques de la matriz inestables*/
-    size_t total_cells;
-    size_t current_offset;
-    size_t next_offset;
-    void* private_data_array;
+    size_t total_cells; /** cantidad de celdas de la lamina */
+    size_t current_offset; /** offset de las temperaturas actuales */
+    size_t next_offset; /** offset de las temperaturas futuras*/
+    void* private_data_array; /** array de structs privados de los hilos */
 } public_data_t;
 /**
  * @brief Estructura de datos privados de cada hilo.
@@ -82,9 +97,9 @@ typedef struct {
     size_t y2;                   /**< Límite superior en Y del área asignada. */
     size_t thread_num;           /**< Número o identificador del hilo. */
     size_t unstable_cells;       /**< Numero de celdas inestables por bloque */
-    size_t index;
-    size_t current_index;
-    size_t next_index;
+    size_t index;                /** indice de la lamina */
+    size_t current_index;        /** indice de las temperaturas actuales */
+    size_t next_index;           /** indice de las temperaturas futuras */
     public_data_t* public_data;  /**< Puntero a la estructura de datos publica*/
 } private_data_t;
 /**
@@ -168,29 +183,8 @@ void plan_thread_distribution(Lamina *lamina,
 int starThreads(Lamina *lamina, file_struct *fileobj,
     public_data_t* public_data);
 /**
- * @brief Actualiza la matriz de temperaturas hasta estabilizarla
- * 
- * Recorre la matriz de temperaturas, actualizando cada celda hasta que todas
- * sean estables (que tengan una diferencia entre el futuro estado y el actual
- * menor a epislon). Intercambia las matrices `temperatures` y
- * next_temperatures` en cada iteración.
- * 
- * @param lamina Puntero a la estructura lamina
- * @param fileobj Puntero a la estructura encargada del manejo de archivos
- * @param public_data puntero a la estructura de datos compartidos entre hilos
- * 
- * @return EXIT_SUCCESS si estabilizo la lamina, EXIT_FAILURE si no
- * 
- * @note Si la simulación falla al finalizar, la función devuelve
- * `EXIT_FAILURE`.
- */
-/**
- * @brief Funcion encargada de iniciar y destruir todos los threads una sola vez
- * 
- * @param lamina Puntero a la estructura lamina
- * @param fileobj Puntero al struct encargado del manejo de archivos
- * @param public_data Puntero al struct de datos compartidos
- * @return EXIT_SUCCESS si no hubo fallos, EXIT_FAILURE en el caso contrario
+ * @brief funcion encargada de actualizar la lamina estado a estado
+ * @param data puntero al struct de datos privados de cada hilo
  */
 void* update_lamina(void* data);
 /**
@@ -201,7 +195,10 @@ void* update_lamina(void* data);
  * x2, y2 son excluyentes, de manera en que nunca existen dos hilos que
  * modifiquen la misma celda, evitando condiciones de carrera o similar
  * 
+ * @param lamina puntero al objeto lamina
  * @param private_data Puntero al struct privado de cada hilo
+ * @param current_offset posicion donde se encuentran las temperaturas actuales
+ * @param next_offset posicion donde se encuentran las temperaturas futuras
  */
 void update_lamina_block(Lamina* lamina, private_data_t* private_data,
     size_t current_offset,
@@ -216,6 +213,8 @@ void update_lamina_block(Lamina* lamina, private_data_t* private_data,
  * @param lamina Puntero a la estructura lamina
  * @param row fila de la celda a actualizar
  * @param column columna de la celda a actualizar
+ * @param current_mat matriz de temperaturas actuales
+ * @param next_mat matriz de las temperaturas futuras
  * @param unstable_cells Puntero a la cantidad de celdas no estables del bloque
  * 
  * @note Solo se actualizan las celdas internas de la matriz, evitando los

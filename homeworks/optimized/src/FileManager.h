@@ -27,6 +27,9 @@ typedef struct {
      * @brief Archivo del binario que contiene los datos de la matriz
      */
     FILE* file;
+    /**
+     * @brief archivo tsv donde se guardaran los reportes de cada lamina
+     */
     FILE* report_file;
 } file_struct;
 typedef struct Lamina Lamina;

@@ -16,8 +16,6 @@
  * @author Anthony Sanchez
  * @date 2025-03-29
  */
-
-
 int lamina_constructor(int argc, char *argv[]) {
     int return_value = 0;
     // En caso de recibir menos parametros a los esperados, retorna EXIT_FAILURE
@@ -27,8 +25,12 @@ int lamina_constructor(int argc, char *argv[]) {
             "the amounth of threads you want to use");
         return EXIT_FAILURE;
     }
+    // variable temporal para guardar la cantidad de hilos a crear
     int64_t temp = 0;
     FILE *file = fopen(argv[1], "r");
+    // si existe un tercer argumento, intentar tomarlo como cantidad de hilos
+    // a crear, si falla, se asume la cantidad de hilos igual a la cantidad
+    // de hilos que tenga el dispositivo en donde se compile el programa
     if (argc == 3) {
         char *end;
         temp = strtoul(argv[2], &end, 10);
@@ -42,19 +44,24 @@ int lamina_constructor(int argc, char *argv[]) {
     } else {
         temp = sysconf(_SC_NPROCESSORS_CONF);
     }
+    // si no se pudo abrir el archivo txt, retornar EXIT_FAILURE
     if (!file) {
         fprintf(stderr, "Error: could not open %s file", argv[1]);
         return EXIT_FAILURE;
     }
+    // variable para guardar la linea leida del txt
     char line[256] = "";
     size_t thread_count = (size_t)temp;
     // while para leer todos los reglones del txt
     printf("THREAD_COUNT: %" PRId64 "\n", thread_count);
     while (fgets(line, sizeof(line), file)) {
+        // creamos un objeto lamina
         Lamina *lamina = (Lamina *)calloc(1, sizeof(Lamina));
+        // creamos el struct de datos compartidos entre hilos
         public_data_t *public_data = calloc(1, sizeof(public_data_t));
         public_data->thread_count = thread_count;
         file_struct * fileobj = (file_struct*)calloc(1, sizeof(file_struct));
+        // si no se pudo crear la lamina, retorna EXIT_FAILURE
         if (!lamina) {
             error_manager(lamina, fileobj,
                 "Error: could not allocate memory for"
@@ -65,12 +72,14 @@ int lamina_constructor(int argc, char *argv[]) {
         "%s", argv[1]);
 
         char *lastSLash = strrchr(fileobj->base_route, '/');
+        // si la ruta no es valida, retorna EXIT_FAILURE
         if (!lastSLash) {
             fprintf(stderr, "Error: invalid route %s\n", argv[1]);
             free(lamina);
             return EXIT_FAILURE;
         }
         *(lastSLash + 1) = '\0';
+        // si no se pudo leer la linea del txt, retorna EXIT_FAILURE
         if (strcmp(line, "") == 0) {
             error_manager(lamina, fileobj,
                 "Error: could not read a line from the .txt"
@@ -84,6 +93,7 @@ int lamina_constructor(int argc, char *argv[]) {
         if (return_value == EXIT_FAILURE) {
             return EXIT_FAILURE;
         }
+        // abrimos el binario indicado en la linea del txt ya leida
         fileobj->file = fopen(fileobj->binary_file_name, "rb");
         printf("Creating lamina...\n");
         // si algo fallo en la creacion de la lamina o en la estabilizacion
@@ -92,11 +102,15 @@ int lamina_constructor(int argc, char *argv[]) {
         if (return_value == EXIT_FAILURE) {
             return EXIT_FAILURE;
         }
+        // si algo fallo en la creacion de los hilos o en la simulacion
+        // retorna EXIT_FAILURE
         return_value = starThreads(lamina, fileobj, public_data);
         if (return_value == EXIT_FAILURE) {
         return EXIT_FAILURE;
     }
+        // liberamos el struct de datos compartidos
         free(public_data);
+        // llamamos a liberar el resto de recursos
         delete_lamina(lamina, fileobj);
     }
     return EXIT_SUCCESS;
@@ -187,10 +201,14 @@ int create_lamina(Lamina *lamina, file_struct* fileobj,
 }
 
 int fillMatriz(Lamina *lamina, file_struct* fileobj) {
+    // bucle para recorrer las filas
     for (size_t i = 0; i < lamina->rows; i++) {
+        // bucle para recorrer las columnas
         for (size_t j = 0; j < lamina->columns; j++) {
             // calculamos el indice
             size_t index = i * lamina->columns + j;
+            // se intenta leer el valor indicado en el binario, si falla
+            // sale del bucle y retorna EXIT_FAILURE
             if (fread(&lamina->temperatures[index], sizeof(double), 1,
             fileobj->file) != 1) {
                 error_manager(lamina, fileobj, "Error: Failed to read"
@@ -199,15 +217,17 @@ int fillMatriz(Lamina *lamina, file_struct* fileobj) {
             }
         }
     }
+    // imprimimos la lamina inicial
     print_lamina(lamina);
     return EXIT_SUCCESS;
 }
 void plan_thread_distribution(Lamina *lamina,
     public_data_t* public_data) {
+    // variable con la cantidad de celdas de la lamin
     double total_cells = lamina->rows * lamina->columns;
     // en caso de haber menos de 100 celdas, no vale la pena crear n hilos
     // para realizar el trabajo de la matriz debido al overhead
-    if (total_cells < 100) {
+    if (total_cells < 500) {
         printf("Warning!: Not enought cells to make the use of threads"
             " worth it, instead the program is gonna use only one thread\n");
         public_data->thread_count = 1;
@@ -217,22 +237,25 @@ void plan_thread_distribution(Lamina *lamina,
     }
     // Llegados aqui, existen suficientes celdas para considerar la creacion de
     // los hilos solicitados para el procesamiento de la matriz
-
     if (public_data->thread_count > total_cells) {
         public_data->thread_count = total_cells;
     }
+    // calculamos cuantas celdas debera procesar cada hilo
     size_t cells_per_thread = total_cells / public_data->thread_count;
-    if (cells_per_thread < 100) {
-        cells_per_thread = 100;
-        public_data->thread_count = total_cells / 100;
+    // si a cada hilo le tocan menos de 100 celdas, asigna 100 a cada thread y
+    // cambia la cantidad de hilos a utilizar
+    if (cells_per_thread < 500) {
+        cells_per_thread = 500;
+        public_data->thread_count = total_cells / 500;
     }
-
+    // calculamos el incremento en filas y columnas que debe hacer cada hilo
     public_data->x_increment = lamina->rows/public_data->thread_count;
     public_data->y_increment = lamina->columns/public_data->thread_count;
 }
 
 int starThreads(Lamina *lamina, file_struct *fileobj,
     public_data_t* public_data) {
+    // asignamos lamina como dato compartido entre los hilos
     public_data->lamina = lamina;
     public_data->total_cells = lamina->rows * lamina->columns;
     // cantidad de hilos a crear
@@ -259,11 +282,15 @@ int starThreads(Lamina *lamina, file_struct *fileobj,
         public_data->thread_count);
     // inicializamos para la primera iteracion del while de update_lamina
     public_data->unstable_blocks = 1;
+    // inicializamos en 0 la cantidad de estados para evitar calculos erroneos
     public_data->estados = 0;
+    // inicializamos en 0 el offset de la matriz actual
     public_data->current_offset = 0;
+    // inicializamos en total_cells el offset de la matriz futura
     public_data->next_offset = public_data->total_cells;
+    // inicializamos el array de structs privados
     public_data->private_data_array =(void*) private_data;
-
+        // bucle para la creacion de los hilos
         for (size_t i = 0; i < thread_count; i++) {
             // si algo falla liberamos toda la memoria reservada
             private_data[i].thread_num = i;
@@ -283,26 +310,32 @@ int starThreads(Lamina *lamina, file_struct *fileobj,
     // liberamos toda la memoria relacionada a los threads
     free(threads);
     free(private_data);
+    printf("\n\n");
+    printf("Estado: %zu\n\n", public_data->estados);
+    // guardamos la cantidad de estados transcurridos
+    lamina->k = public_data->estados;
+    // guardamos la cantidad de tiempo que le tomo a la simulacion finalizar
+    lamina->time *= lamina->k;
     int return_value = 0;
+    // si la finalizacio de la simulacion falla, retorna EXIT_FAILURE
     return_value = finish_simulation(lamina, fileobj);
     if (return_value == EXIT_FAILURE) {
         printf("[ERROR] finish_simulation falló\n");
         return EXIT_FAILURE;
     }
-    printf("\n\n");
-    printf("Estado: %zu\n\n", public_data->estados);
-    lamina->k = public_data->estados;
-    lamina->time *= lamina->k;
     printf("Lamina estabilizada: \n");
+    // imprimimos la lamina final
     print_lamina(lamina);
     return EXIT_SUCCESS;
-}void* update_lamina(void *data) {
+}
+void* update_lamina(void *data) {
     assert(data);
     private_data_t* private_data = (private_data_t*) data;
     public_data_t* public_data = private_data->public_data;
     Lamina* lamina = public_data->lamina;
     size_t thread_count = public_data->thread_count;
-
+    // bucle que termina hasta que se estabilice la lamina o que ocurra un
+    // error
     while (1) {
         // Cada hilo actualiza su bloque y guarda unstable_cells localmente
         update_lamina_block(lamina, private_data,
@@ -311,7 +344,9 @@ int starThreads(Lamina *lamina, file_struct *fileobj,
 
         // Primera barrera: sincronizar fin de trabajo
         int is_serial = pthread_barrier_wait(&public_data->barrier);
-
+        // solo un hilo (el serial), verificara si existen bloques inestables
+        // y aumenta la cantidad de estados ocurridos y haciendo el swap de
+        // matrices, evitando condiciones de carrera
         if (is_serial == PTHREAD_BARRIER_SERIAL_THREAD) {
             public_data->estados++;
             size_t total_unstable = 0;
@@ -319,13 +354,13 @@ int starThreads(Lamina *lamina, file_struct *fileobj,
                 total_unstable += ((private_data_t*)public_data->
                 private_data_array)[i].unstable_cells;
             }
-
+            // guardamos la cantidad de bloques inestables
             public_data->unstable_blocks = total_unstable;
-
             // Swap offsets
             size_t temp = public_data->current_offset;
             public_data->current_offset = public_data->next_offset;
             public_data->next_offset = temp;
+            //printf("Estado: %zu\n", public_data->estados);
         }
 
         // Segunda barrera: asegurar que todos ven updated unstable_blocks y
@@ -358,16 +393,19 @@ void update_lamina_block(Lamina* lamina, private_data_t* private_data,
     // pues estos son constantes
     for (size_t i = private_data->x1; i < private_data->x2; i++) {
         for (size_t j = private_data->y1; j < private_data->y2; j++) {
+            // calculamos index para calcular current_index y next_index
             private_data->index = i * lamina->columns + j;
             private_data->current_index = current_offset + private_data->index;
             private_data->next_index = next_offset + private_data->index;
-
+            // si la celda actual es el borde, mantenemos la temperatura
             if (i == 0 || i == private_data->public_data->lamina->rows - 1 ||
                 j == 0 || j == private_data->public_data->lamina->columns - 1) {
                 lamina->temperatures[private_data->next_index] =
                 lamina->temperatures[private_data->current_index];
                 continue;
             }
+            // reseteamos la temperatura futura de la celda para evitar
+            // calculos erroneos
             lamina->temperatures[private_data->next_index] = 0;
                 update_cell(lamina, i, j, lamina->temperatures + current_offset,
             lamina->temperatures + next_offset, &private_data->unstable_cells);
@@ -375,41 +413,30 @@ void update_lamina_block(Lamina* lamina, private_data_t* private_data,
     }
     return;
 }
-/**
- * @brief Actualiza la temperatura de la celda recibida.
- * 
- * Calcula la nueva temperatura de la celda en la posición (`row`, `column`)
- * basada en el método de diferencias finitas, utilizando las temperaturas de
- * sus celdas adyacentes.
- * 
- * @param lamina Puntero a la estructura lamina
- * @param row fila de la celda a actualizar
- * @param column columna de la celda a actualizar
- * 
- * @note Solo se actualizan las celdas internas de la matriz, evitando los
- * bordes.
- */
 void update_cell(Lamina *lamina, size_t row, size_t column, double *current_mat,
     double *next_mat, size_t* unstable_cells) {
     double diff = 0;
     size_t cols = lamina->columns;
     size_t idx = row * cols + column;
-
+    // guardamos las temperaturas de las celdas adyacentes
     double up = current_mat[(row - 1) * cols + column];
     double down = current_mat[(row + 1) * cols + column];
     double left = current_mat[row * cols + (column - 1)];
     double right = current_mat[row * cols + (column + 1)];
-
+    // calculamos la temperatura futura de la celda
     next_mat[idx] = current_mat[idx] +
         ((lamina->time * lamina->conductivity) / (lamina->height *
             lamina->height)) *
         (up + down + right + left - 4 * current_mat[idx]);
+    // verificamos si la celda esta estabilizada, si no lo esta, aumentamos el
+    // valor de unstable_cells
     diff = fabs(next_mat[idx] - current_mat[idx]);
         if (diff > lamina->epsilon) {
             (*unstable_cells)++;
         }
 }
 int finish_simulation(Lamina * lamina, file_struct *fileobj) {
+    // si falla el manejo del archivo de reporte, retorna EXIT_FAILURE
     int return_value = report_file(lamina, fileobj);
     if (return_value == EXIT_FAILURE) {
         return EXIT_FAILURE;
@@ -420,7 +447,9 @@ void print_lamina(Lamina* lamina) {
     return;
     printf("Matriz de temperaturas:\n");
     size_t index = 0;
+    // bucle para recorrer las filas
     for (uint64_t i = 0; i < lamina->rows; i++) {
+    // bucle para recorrer las columnas
         for (uint64_t j = 0; j < lamina->columns; j++) {
             index = i * lamina->columns + j;
             printf("[%g] ", lamina->temperatures[index]);
@@ -430,17 +459,21 @@ void print_lamina(Lamina* lamina) {
 }
 void error_manager(Lamina *lamina, file_struct *fileobj,
     const char* error_message) {
+    // imprimimos el mensaje de error recibido
     fprintf(stderr, "%s\n", error_message);
-    if (lamina) {
-        delete_lamina(lamina, fileobj);
-    }
+    // llamamos a liberar toda la memoria reservada
+    delete_lamina(lamina, fileobj);
 }
 void delete_lamina(Lamina * lamina, file_struct* fileobj) {
+    // si existe el objeto lamina, libera la memoria de sus atributos
     if (lamina) {
+        // si existe la lamina, la libera
         if (lamina->temperatures) {
             free(lamina->temperatures);
         }
+        // llama al destructor de fileobj
         delete_files(fileobj);
+        // libera la lamina
         free(lamina);
     }
 }
