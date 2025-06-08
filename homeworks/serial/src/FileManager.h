@@ -27,6 +27,9 @@ typedef struct {
      * @brief Archivo de binario que contiene los datos de la matriz
      */
     FILE* file;
+    /**
+     * @brief archivo tsv donde se guardan los reportes de la lamina
+     */
     FILE* report_file;
 } shared_file_data;
 typedef struct Lamina Lamina;
@@ -49,4 +52,4 @@ int report_file(Lamina *lamina, shared_file_data *file_obj);
  * @return 'EXIT SUCCESS' despues de haber liberado toda la memoria
  */
 int delete_files(shared_file_data *fileobj);
-#endif
+#endif  // HOMEWORKS_SERIAL_SRC_FILEMANAGER_H_

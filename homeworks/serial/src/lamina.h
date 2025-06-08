@@ -17,12 +17,21 @@
  * parámetros a utilizar
  */
 typedef struct Lamina {
+    /**
+     * @brief Número de filas de la lamina
+     */
     uint64_t rows;
+    /**
+     * @brief Número de columnas de la lamina
+     */
     uint64_t columns;
     /**
      * @brief El valor de k utilizado en la simulación.
      */
     double k;
+    /**
+     * @brief Tiempo total de la simulación en segundos.
+     */
     uint64_t time;
     /**
      * @brief Conductividad térmica del material.
@@ -39,8 +48,10 @@ typedef struct Lamina {
      * cuando las temperaturas ya no cambian significativamente entre pasos.
      */
     double epsilon;
+    /**
+     * @brief Matriz de temperaturas de la lámina.
+     */
     double *temperatures;
-    
 } Lamina;
 /**
  * @brief Construye el objeto Lamina a partir de los parámetros dados.
@@ -106,6 +117,9 @@ int update_lamina(Lamina *lamina, shared_file_data *fileobj);
  * @param lamina Estructura Lamina con las temperaturas actuales.
  * @param row Fila de la celda a actualizar.
  * @param column Columna de la celda a actualizar.
+ * @param current_mat Matriz de temperaturas actuales.
+ * @param next_mat Matriz de temperaturas futuras.
+ * @param cols Número de columnas de la matriz.
  */
 void update_cell(Lamina *lamina, size_t row, size_t column, double *current_mat,
     double *next_mat, size_t cols);
