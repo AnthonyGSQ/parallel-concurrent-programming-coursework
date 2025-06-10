@@ -1,60 +1,73 @@
 // Copyright 2024 ECCI-UCR CC-BY-4
 #pragma once
+
 #include <mpi.h>
 #include <string>
 
 #include <stdexcept>
 
 class Mpi {
-    private:
-      int processNumber = -1;
-      int processCount = -1;
-      std::string hostName;
+ private:
+  int processNumber = -1;
+  int processCount = -1;
+  std::string hostname;
 
-    public:
-      Mpi(int& argc, char**& argv) {
-        if (MPI_Init(&argc ,&argv ) != MPI_SUCCESS) {
-          std::cerr<<"error: c\n";
-          throw std::runtime_error("Could not init MPI");
-        }
-        int process_number = -1;
-        if (MPI_Comm_rank(MPI_COMM_WORLD, &process_number) != MPI_SUCCESS) {
-          throw std::runtime_error("could not get MPI rank");
-        }
-        if (MPI_Comm_size(MPI_COMM_WORLD, &processCount) != MPI_SUCCESS) {
-          throw::std::runtime_error("Could not get size");
-        }
-        int hostname_len = -1;
-        char processHostName[MPI_MAX_PROCESSOR_NAME] = { '\0' };
-        if (MPI_Get_processor_name(processHostName, &hostname_len) != MPI_SUCCESS) {
-          throw std::runtime_error("could not get MPI processor name (hostName)");
-        }
-        this->processCount = -1;
-        std::cout << "Hello from main thread of process " << process_number
-        << " of " << processCount << " on " << processHostName << std::endl;
-        this->hostName = processHostName;
-        }
-    Mpi (const Mpi&) = delete;
-    Mpi (Mpi&&) = delete;
-    ~Mpi() {
-      MPI_Finalize ();
+ public:
+  class Error : public std::runtime_error {
+   public:
+    explicit Error(const std::string& message)
+      : runtime_error(message) {
     }
-    Mpi& operator=(const Mpi&) = delete;
-    Mpi& operator=(Mpi&&) = delete;
-    public:
-      inline int getProcessNumber() const {
-        return this->processNumber;
-      }
-      inline int getProcessCount() const {
-        return this->processCount;
-      }
-      inline const std::string& getHostname() const {
-        return this->hostName;
-      }
-      inline int rank() const {
-        return this->getProcessNumber();
-      }
-      inline int size() const {
-        return this->getProcessCount();
-      }
-};  
+    Error(const std::string& message, const Mpi& mpi)
+      : runtime_error(mpi.getHostname() + ':' + std::to_string(mpi.rank())
+      + ": " + message) {
+    }
+    Error(const std::string& message, const Mpi& mpi, const int threadNumber)
+      : runtime_error(mpi.getHostname() + ':' + std::to_string(mpi.rank())
+      + '.' + std::to_string(threadNumber) + ": " + message) {
+    }
+  };
+  
+ public:
+  Mpi(int& argc, char**& argv) {
+    if (MPI_Init(&argc, &argv) != MPI_SUCCESS) {
+      throw Error("could not init MPI");
+    }
+    if (MPI_Comm_rank(MPI_COMM_WORLD, &this->processNumber) != MPI_SUCCESS) {
+      throw Error("could not get MPI rank");
+    }
+    if (MPI_Comm_size(MPI_COMM_WORLD, &this->processCount) != MPI_SUCCESS) {
+      throw Error("could not get MPI size");
+    }
+    char processHostname[MPI_MAX_PROCESSOR_NAME] = { '\0' };
+    int hostnameLen = -1;
+    if (MPI_Get_processor_name(processHostname, &hostnameLen) != MPI_SUCCESS) {
+      throw Error("could not get MPI processor name");
+    }
+    this->hostname = processHostname;
+  }
+  Mpi(const Mpi&) = delete;
+  Mpi(Mpi&&) = delete;
+  ~Mpi() {
+    MPI_Finalize();
+  }
+  Mpi& operator=(const Mpi&) = delete;
+  Mpi& operator=(Mpi&&) = delete;
+
+ public:  // Accessors
+  inline int getProcessNumber() const {
+    return this->processNumber;
+  }
+  inline int getProcessCount() const {
+    return this->processCount;
+  }
+  inline const std::string& getHostname() const {
+    return this->hostname;
+  }
+  inline int rank() const {
+    return this->getProcessNumber();
+  }
+  inline int size() const {
+    return this->getProcessCount();
+  }
+};
