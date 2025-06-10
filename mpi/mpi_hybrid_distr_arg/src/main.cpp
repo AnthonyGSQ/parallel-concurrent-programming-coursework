@@ -14,42 +14,40 @@ int calculate_finish(int rank, int end, int workers, int begin);
 int main(int argc, char* argv[]) {
   try {
     Mpi mpi(argc, argv);
+    int overall_start = -1;
+    int overall_finish = -1;
     if (argc == 3) {
-      const int overall_start = atoi(argv[1]);
-      const int overall_finish = atoi(argv[2]);
-
-      const int process_start = calculate_start(mpi.rank(), overall_finish
-        , mpi.size(), overall_start);
-      const int process_finish = calculate_finish(mpi.rank(), overall_finish
-        , mpi.size(), overall_start);
-      const int process_size = process_finish - process_start;
-
-      std::cout << mpi.getHostname() << ':' << mpi.getProcessNumber()
-          << ": range [" << process_start << ", " << process_finish
-          << "[ size " << process_size << std::endl;
-
-      #pragma omp parallel default(none) \
-        shared(process_start, process_finish, std::cout, mpi)
-      {  // NOLINT(?)
-        int thread_start = -1;
-        int thread_finish = -1;
-
-        #pragma omp for
-        for (int index = process_start; index < process_finish; ++index) {
-          // do_task(index);
-          if (thread_start == -1) {
-            thread_start = index;
-          }
-          thread_finish = index + 1;
+      overall_start = atoi(argv[1]);
+      overall_finish = atoi(argv[2]);
+    } else {
+      std::cin>>overall_start>>overall_finish;
+    }
+    const int process_start = calculate_start(mpi.rank(), overall_finish
+      , mpi.size(), overall_start);
+    const int process_finish = calculate_finish(mpi.rank(), overall_finish
+      , mpi.size(), overall_start);
+    const int process_size = process_finish - process_start;
+    std::cout << mpi.getHostname() << ':' << mpi.getProcessNumber()
+        << ": range [" << process_start << ", " << process_finish
+        << "[ size " << process_size << std::endl;
+    #pragma omp parallel default(none) \
+      shared(process_start, process_finish, std::cout, mpi)
+    {  // NOLINT(?)
+      int thread_start = -1;
+      int thread_finish = -1;
+      #pragma omp for
+      for (int index = process_start; index < process_finish; ++index) {
+        // do_task(index);
+        if (thread_start == -1) {
+          thread_start = index;
         }
-
-        const int thread_size = thread_finish - thread_start;
-
-        #pragma omp critical(print)
-        std::cout << '\t' << mpi.getHostname() << ':' << mpi.getProcessNumber()
-            << '.' << omp_get_thread_num() << ": range [" << thread_start << ", "
-            << thread_finish << "[ size " << thread_size << std::endl;
+        thread_finish = index + 1;
       }
+      const int thread_size = thread_finish - thread_start;
+      #pragma omp critical(print)
+      std::cout << '\t' << mpi.getHostname() << ':' << mpi.getProcessNumber()
+          << '.' << omp_get_thread_num() << ": range [" << thread_start << ", "
+          << thread_finish << "[ size " << thread_size << std::endl;
 
     } else {
       std::cerr << "usage: hybrid_distr_arg start finish" << std::endl;
