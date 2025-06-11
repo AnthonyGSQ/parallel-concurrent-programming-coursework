@@ -71,6 +71,7 @@ double* temperatures = malloc(2 * rows * columns * sizeof(double));
 |1 |Conc0 |740.903 |0.06 |1.54% |Versión concurrente inicial (Tarea02)
 |2 |Conc01 |195.611 |0.23 |5.82% |Version con barreras para los threads
 |3 |Conc02 |106.513 |0.42 |10.69% |Versión con menor control de concurrencia
+|3 |Conc02 |208.920 |0.22 |5.45% |Versión con mapeo dinamico
 |===
 
 
@@ -190,7 +191,7 @@ void* update_lamina(void *data) {
 }
 ----
 
-=== Después (sin mutexes, con solo dos barreras)
+==== Después: (sin mutexes, con solo dos barreras)
 
 [source,c]
 ----
@@ -220,6 +221,78 @@ void* update_lamina(void *data) {
     ...
 }
 ----
+
+[[conc_iter03]]
+=== Iteración 3
+
+Anteriormente se utilizaba mapeo estatico para la asignacion de filas de la lamina, esta iteracion
+busco cambiar eso, implementando mapeo dinamico, es decir, en lugar de calcular que filas le corresponden
+a cada hilo, ahora la fila pasa a ser procesada por el primer hilo que llegue a reclamarla. Sin embargo,
+debido al overhead de la construccion y destruccion de hilos, mas el control de concurrencia con barreras
+y con mutex. El rendimiento bajo considerablemente en comparasion con la iteracion02 del concurrente, llegando
+a tardar el doble de tiempo.
+
+==== Antes:
+[source, bash]
+----
+# calculo de coordenadas para el recorrido de cada hilo
+private_data->x1 = ...
+private_data->x2 = ...
+private_data->y1 = 0;
+private_data->y2 = ...
+// recorrido del bloque correspondiente de cada hilo, que ignora los bordes
+// pues estos son constantes
+for (size_t i = private_data->x1; i < private_data->x2; i++) {
+    for (size_t j = private_data->y1; j < private_data->y2; j++) {
+        ...
+        ...
+        ...
+        if (i == 0 || i == private_data->public_data->lamina->rows - 1 ||
+            j == 0 || j == private_data->public_data->lamina->columns - 1) {
+            ...
+            ...
+            ...
+        }
+        // reseteamos la temperatura futura de la celda para evitar
+        // calculos erroneos
+        lamina->temperatures[private_data->next_index] = 0;
+            update_cell(lamina, i, j, lamina->temperatures + current_offset,
+        lamina->temperatures + next_offset, &private_data->unstable_cells);
+    }
+}
+----
+
+==== Despues:
+[source, bash]
+----
+while (row < rows) {
+    pthread_mutex_lock
+    row = public_data->next_row;
+    public_data->next_row++;
+    pthread_mutex_unlock
+    if (row < rows) {
+        for (size_t j = 0; j < cols; j++) {
+            ...
+            ...
+            ...
+            // si la celda actual es el borde, mantenemos la temperatura
+            if (row == 0 || row == private_data->public_data->lamina->rows - 1 ||
+                j == 0 || j == private_data->public_data->lamina->columns - 1) {
+                ...
+                ...
+                ...
+            }
+            // reseteamos la temperatura futura de la celda para evitar
+            // calculos erroneos
+            lamina->temperatures[private_data->next_index] = 0;
+                update_cell(lamina, row, j, lamina->temperatures + public_data->current_offset,
+            lamina->temperatures + public_data->next_offset, &private_data->unstable_cells);
+        }
+    }
+}
+----
+
+
 
 [[optimization_comparison]]
 === Comparación de optimizaciones

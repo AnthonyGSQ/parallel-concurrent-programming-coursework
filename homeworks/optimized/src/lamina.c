@@ -282,6 +282,8 @@ int starThreads(Lamina *lamina, file_struct *fileobj,
         public_data->thread_count);
     // inicializamos para la primera iteracion del while de update_lamina
     public_data->unstable_blocks = 1;
+    // inicializamos next_row para la primera iteracion de update_lamina
+    public_data->next_row = 0;
     // inicializamos en 0 la cantidad de estados para evitar calculos erroneos
     public_data->estados = 0;
     // inicializamos en 0 el offset de la matriz actual
@@ -328,14 +330,15 @@ int starThreads(Lamina *lamina, file_struct *fileobj,
     print_lamina(lamina);
     return EXIT_SUCCESS;
 }
+// funcion con mapeo estatico
+/*
 void* update_lamina(void *data) {
     assert(data);
     private_data_t* private_data = (private_data_t*) data;
     public_data_t* public_data = private_data->public_data;
     Lamina* lamina = public_data->lamina;
     size_t thread_count = public_data->thread_count;
-    // bucle que termina hasta que se estabilice la lamina o que ocurra un
-    // error
+
     while (1) {
         // Cada hilo actualiza su bloque y guarda unstable_cells localmente
         update_lamina_block(lamina, private_data,
@@ -344,9 +347,7 @@ void* update_lamina(void *data) {
 
         // Primera barrera: sincronizar fin de trabajo
         int is_serial = pthread_barrier_wait(&public_data->barrier);
-        // solo un hilo (el serial), verificara si existen bloques inestables
-        // y aumenta la cantidad de estados ocurridos y haciendo el swap de
-        // matrices, evitando condiciones de carrera
+
         if (is_serial == PTHREAD_BARRIER_SERIAL_THREAD) {
             public_data->estados++;
             size_t total_unstable = 0;
@@ -354,13 +355,13 @@ void* update_lamina(void *data) {
                 total_unstable += ((private_data_t*)public_data->
                 private_data_array)[i].unstable_cells;
             }
-            // guardamos la cantidad de bloques inestables
+
             public_data->unstable_blocks = total_unstable;
+
             // Swap offsets
             size_t temp = public_data->current_offset;
             public_data->current_offset = public_data->next_offset;
             public_data->next_offset = temp;
-            //printf("Estado: %zu\n", public_data->estados);
         }
 
         // Segunda barrera: asegurar que todos ven updated unstable_blocks y
@@ -375,6 +376,94 @@ void* update_lamina(void *data) {
 
     return NULL;
 }
+
+*/
+// funcion con mapeo dinamico
+void* update_lamina(void *data) {
+    assert(data);
+    private_data_t* private_data = (private_data_t*) data;
+    public_data_t* public_data = private_data->public_data;
+    Lamina* lamina = public_data->lamina;
+    size_t thread_count = public_data->thread_count;
+    size_t rows = lamina->rows;
+    size_t cols = lamina->columns;
+    int tid = private_data->thread_num;
+
+    while (1) {
+        private_data->unstable_cells = 0;
+
+        if (pthread_barrier_wait(&public_data->barrier) == PTHREAD_BARRIER_SERIAL_THREAD) {
+            public_data->next_row = 0;
+            //printf("[DEBUG] [Thread %d] Reset next_row a 0\n", tid);
+        }
+        pthread_barrier_wait(&public_data->barrier);
+
+        //printf("[DEBUG] [Thread %d] Nueva iteración de la lámina\n", tid);
+
+        size_t row = 0;
+        while (row < rows) {
+            pthread_mutex_lock(&public_data->row_mutex);
+            row = public_data->next_row;
+            public_data->next_row++;
+            pthread_mutex_unlock(&public_data->row_mutex);
+
+            if (row < rows) {
+                //printf("[DEBUG] [Thread %d] Procesando fila %zu\n", tid, row);
+
+                for (size_t j = 0; j < cols; j++) {
+                    // calculamos index para calcular current_index y next_index
+                    private_data->index = row * lamina->columns + j;
+                    private_data->current_index = public_data->current_offset + private_data->index;
+                    private_data->next_index = public_data->next_offset + private_data->index;
+                    // si la celda actual es el borde, mantenemos la temperatura
+                    if (row == 0 || row == private_data->public_data->lamina->rows - 1 ||
+                        j == 0 || j == private_data->public_data->lamina->columns - 1) {
+                        lamina->temperatures[private_data->next_index] =
+                        lamina->temperatures[private_data->current_index];
+                        continue;
+                    }
+                    // reseteamos la temperatura futura de la celda para evitar
+                    // calculos erroneos
+                    lamina->temperatures[private_data->next_index] = 0;
+                        update_cell(lamina, row, j, lamina->temperatures + public_data->current_offset,
+                    lamina->temperatures + public_data->next_offset, &private_data->unstable_cells);
+                }
+            }
+        }
+
+        //printf("[DEBUG] [Thread %d] Terminó su bloque. Unstable cells: %zu\n", tid, private_data->unstable_cells);
+
+        int is_serial = pthread_barrier_wait(&public_data->barrier);
+
+        if (is_serial == PTHREAD_BARRIER_SERIAL_THREAD) {
+            size_t total_unstable = 0;
+            for (size_t i = 0; i < thread_count; i++) {
+                total_unstable += ((private_data_t*)public_data->private_data_array)[i].unstable_cells;
+                //printf("[DEBUG] [Serial] Hilo %zu tuvo %zu celdas inestables\n", i, total_unstable);
+            }
+
+            //printf("[DEBUG] [Serial] Total unstable: %zu\n", total_unstable);
+
+            public_data->unstable_blocks = total_unstable;
+            //printf("ESTADO: %" PRIu64 "\n", public_data->estados);
+            public_data->estados++;
+
+            size_t tmp = public_data->current_offset;
+            public_data->current_offset = public_data->next_offset;
+            public_data->next_offset = tmp;
+        }
+
+        pthread_barrier_wait(&public_data->barrier);
+
+        if (public_data->unstable_blocks == 0) {
+            //printf("[DEBUG] [Thread %d] Condición de corte alcanzada. Saliendo...\n", tid);
+            break;
+        }
+    }
+
+    return NULL;
+}
+
 
 void update_lamina_block(Lamina* lamina, private_data_t* private_data,
     size_t current_offset,

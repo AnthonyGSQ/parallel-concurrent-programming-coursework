@@ -43,6 +43,7 @@ int report_file(Lamina *lamina, file_struct *fileobj) {
     // formateamos el tiempo a una escritura legible para una persona
     format_time(lamina->time, text, sizeof(text));
     fprintf(fileobj->report_file, "%s", text);
+    printf("TEXTO:\n\n %s\n\n", text);
     return EXIT_SUCCESS;
 }
 int delete_files(file_struct *fileobj) {

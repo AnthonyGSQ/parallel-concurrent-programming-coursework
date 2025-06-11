@@ -74,13 +74,14 @@ typedef struct {
     size_t thread_count;  /**< Número total de hilos en ejecución. */
     Lamina* lamina;       /**< Puntero a la estructura lamina */
     // mutex para modificar swap_matrix y unstable_blocks
-    pthread_mutex_t can_add_unstable_blocks;
+    pthread_mutex_t row_mutex;
     pthread_barrier_t barrier; /* barrera para sincronizar los hilos*/
     size_t estados; /* cantidad de estados transcurridos*/
     size_t unstable_blocks; /*cantidad de bloques de la matriz inestables*/
     size_t total_cells; /** cantidad de celdas de la lamina */
     size_t current_offset; /** offset de las temperaturas actuales */
     size_t next_offset; /** offset de las temperaturas futuras*/
+    size_t next_row; /** contador de la fila actual a procesar */
     void* private_data_array; /** array de structs privados de los hilos */
 } public_data_t;
 /**
