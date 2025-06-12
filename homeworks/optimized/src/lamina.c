@@ -381,6 +381,7 @@ void* update_lamina(void *data) {
 // funcion con mapeo dinamico
 void* update_lamina(void *data) {
     assert(data);
+    // para escribir menos, sacamos los datos del private a variables locales
     private_data_t* private_data = (private_data_t*) data;
     public_data_t* public_data = private_data->public_data;
     Lamina* lamina = public_data->lamina;
@@ -388,36 +389,45 @@ void* update_lamina(void *data) {
     size_t rows = lamina->rows;
     size_t cols = lamina->columns;
     int tid = private_data->thread_num;
-
+    // bucle que termina solo cuando ocurre un error o cuando la lamina no tiene
+    // ni una sola celda inestable
     while (1) {
+        // reseteamos la cantidad de celdas inestables para cada estado
+        // procesado de la matriz
         private_data->unstable_cells = 0;
-
-        if (pthread_barrier_wait(&public_data->barrier) == PTHREAD_BARRIER_SERIAL_THREAD) {
+        // reseteamos la fila actual de cada hilo
+        size_t row = 0;
+        // barrera para asegurarnos de que ningun hilo empiece a procesar la
+        // lamina sin haber reseteado next_row
+        if (pthread_barrier_wait(&public_data->barrier) ==
+            PTHREAD_BARRIER_SERIAL_THREAD) {
             public_data->next_row = 0;
-            //printf("[DEBUG] [Thread %d] Reset next_row a 0\n", tid);
         }
         pthread_barrier_wait(&public_data->barrier);
-
-        //printf("[DEBUG] [Thread %d] Nueva iteración de la lámina\n", tid);
-
-        size_t row = 0;
+        // bucle que finaliza una vez se han iterado todas las filas
         while (row < rows) {
+            // un solo hilo accede a la fila que debe ser procesada y aumenta
+            // el valor de next_row asegurando que ningun hilo procesara
+            // la misma fila que otro
             pthread_mutex_lock(&public_data->row_mutex);
             row = public_data->next_row;
             public_data->next_row++;
             pthread_mutex_unlock(&public_data->row_mutex);
-
+            // condicional por si algun hilo toma un valor de fila que se salga
+            // del tamano de la lamina
             if (row < rows) {
-                //printf("[DEBUG] [Thread %d] Procesando fila %zu\n", tid, row);
-
+                // for para iterar por las columnas
                 for (size_t j = 0; j < cols; j++) {
                     // calculamos index para calcular current_index y next_index
                     private_data->index = row * lamina->columns + j;
-                    private_data->current_index = public_data->current_offset + private_data->index;
-                    private_data->next_index = public_data->next_offset + private_data->index;
+                    private_data->current_index = public_data->current_offset +
+                    private_data->index;
+                    private_data->next_index = public_data->next_offset +
+                    private_data->index;
                     // si la celda actual es el borde, mantenemos la temperatura
-                    if (row == 0 || row == private_data->public_data->lamina->rows - 1 ||
-                        j == 0 || j == private_data->public_data->lamina->columns - 1) {
+                    if (row == 0 || row == private_data->public_data->
+                            lamina->rows - 1 || j == 0 || j == private_data->
+                            public_data->lamina->columns - 1) {
                         lamina->temperatures[private_data->next_index] =
                         lamina->temperatures[private_data->current_index];
                         continue;
@@ -425,38 +435,37 @@ void* update_lamina(void *data) {
                     // reseteamos la temperatura futura de la celda para evitar
                     // calculos erroneos
                     lamina->temperatures[private_data->next_index] = 0;
-                        update_cell(lamina, row, j, lamina->temperatures + public_data->current_offset,
-                    lamina->temperatures + public_data->next_offset, &private_data->unstable_cells);
+                    // procesamos la celda actual
+                        update_cell(lamina, row, j, lamina->temperatures +
+                            public_data->current_offset,
+                    lamina->temperatures + public_data->next_offset,
+                        &private_data->unstable_cells);
                 }
             }
         }
-
-        //printf("[DEBUG] [Thread %d] Terminó su bloque. Unstable cells: %zu\n", tid, private_data->unstable_cells);
-
-        int is_serial = pthread_barrier_wait(&public_data->barrier);
-
-        if (is_serial == PTHREAD_BARRIER_SERIAL_THREAD) {
+        // barrera para evitar indeterminismo con respecto al conteo de celdas
+        // y bloques inestables, lo que provocaria resultados incorrectos
+        if (pthread_barrier_wait(&public_data->barrier) ==
+                PTHREAD_BARRIER_SERIAL_THREAD) {
             size_t total_unstable = 0;
             for (size_t i = 0; i < thread_count; i++) {
-                total_unstable += ((private_data_t*)public_data->private_data_array)[i].unstable_cells;
-                //printf("[DEBUG] [Serial] Hilo %zu tuvo %zu celdas inestables\n", i, total_unstable);
+                total_unstable += ((private_data_t*)public_data->
+                    private_data_array)[i].unstable_cells;
             }
 
-            //printf("[DEBUG] [Serial] Total unstable: %zu\n", total_unstable);
-
             public_data->unstable_blocks = total_unstable;
-            //printf("ESTADO: %" PRIu64 "\n", public_data->estados);
             public_data->estados++;
 
             size_t tmp = public_data->current_offset;
             public_data->current_offset = public_data->next_offset;
             public_data->next_offset = tmp;
         }
-
+        // barrera para esperar a que se hayan contado todos los bloques de
+        // todos los hilos, evitando indeterminismo para la condicion de parada
         pthread_barrier_wait(&public_data->barrier);
-
+        // si no existen bloques inestables, no existen celdas inestables
+        // por ende, se ha estabilizado la lamina
         if (public_data->unstable_blocks == 0) {
-            //printf("[DEBUG] [Thread %d] Condición de corte alcanzada. Saliendo...\n", tid);
             break;
         }
     }
