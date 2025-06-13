@@ -23,24 +23,28 @@ int main(int argc, char* argv[]) {
       if (mpi.rank() == 0) {
         std::cin >> overall_start >> overall_finish;
         for (int destination = 1; destination < mpi.size(); ++destination) {
-          if (MPI_Send(&overall_start, /*count*/ 1, MPI_INT, destination,
-            /*tag*/ 0, MPI_COMM_WORLD) != MPI_SUCCESS) {
-            throw Mpi::Error("could not send start", mpi);
-          }
-          if (MPI_Send(&overall_finish, /*count*/ 1, MPI_INT, destination,
-            /*tag*/ 0, MPI_COMM_WORLD) != MPI_SUCCESS) {
-            throw Mpi::Error("could not send finish", mpi);
-          }
+          // if (MPI_Send(&overall_start, /*count*/ 1, MPI_INT, destination,
+          //   /*tag*/ 0, MPI_COMM_WORLD) != MPI_SUCCESS) {
+          //   throw Mpi::Error("could not send start", mpi);
+          // }
+          // if (MPI_Send(&overall_finish, /*count*/ 1, MPI_INT, destination,
+          //   /*tag*/ 0, MPI_COMM_WORLD) != MPI_SUCCESS) {
+          //   throw Mpi::Error("could not send finish", mpi);
+          // }
+          mpi.send(overall_start, destination);
+          mpi.send(overall_finish, destination);
         }
       } else {
-        if (MPI_Recv(&overall_start, /*count*/ 1, MPI_INT, /*source*/ 0,
-          /*tag*/ 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE) != MPI_SUCCESS)  {
-          throw Mpi::Error("could not receive start", mpi);
-        }
-        if (MPI_Recv(&overall_finish, /*count*/ 1, MPI_INT, /*source*/ 0,
-          /*tag*/ 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE) != MPI_SUCCESS)  {
-          throw Mpi::Error("could not receive finish", mpi);
-        }
+        // if (MPI_Recv(&overall_start, /*count*/ 1, MPI_INT, /*source*/ 0,
+        //   /*tag*/ 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE) != MPI_SUCCESS)  {
+        //   throw Mpi::Error("could not receive start", mpi);
+        // }
+        // if (MPI_Recv(&overall_finish, /*count*/ 1, MPI_INT, /*source*/ 0,
+        //   /*tag*/ 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE) != MPI_SUCCESS)  {
+        //   throw Mpi::Error("could not receive finish", mpi);
+        // }
+        mpi.receive(overall_start, 0);
+        mpi.receive(overall_finish, 0);
       }
     }
 
