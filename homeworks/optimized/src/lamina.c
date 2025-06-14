@@ -331,7 +331,7 @@ int starThreads(Lamina *lamina, file_struct *fileobj,
     return EXIT_SUCCESS;
 }
 // funcion con mapeo estatico
-/*
+
 void* update_lamina(void *data) {
     assert(data);
     private_data_t* private_data = (private_data_t*) data;
@@ -377,9 +377,9 @@ void* update_lamina(void *data) {
     return NULL;
 }
 
-*/
 // funcion con mapeo dinamico
-void* update_lamina(void *data) {
+/*
+oid* update_lamina(void *data) {
     assert(data);
     // para escribir menos, sacamos los datos del private a variables locales
     private_data_t* private_data = (private_data_t*) data;
@@ -472,6 +472,7 @@ void* update_lamina(void *data) {
 
     return NULL;
 }
+*/
 
 
 void update_lamina_block(Lamina* lamina, private_data_t* private_data,

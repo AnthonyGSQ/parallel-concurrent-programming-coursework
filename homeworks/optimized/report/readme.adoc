@@ -71,7 +71,7 @@ double* temperatures = malloc(2 * rows * columns * sizeof(double));
 |1 |Conc0 |740.903 |0.06 |1.54% |Versión concurrente inicial (Tarea02)
 |2 |Conc01 |195.611 |0.23 |5.82% |Version con barreras para los threads
 |3 |Conc02 |106.513 |0.42 |10.69% |Versión con menor control de concurrencia
-|3 |Conc02 |208.920 |0.22 |5.45% |Versión con mapeo dinamico
+|3 |Conc03 |155.040 |0.29 |7.34% |Versión con mapeo dinamico
 |===
 
 
@@ -307,7 +307,9 @@ La versión serial original tomaba 70.909 segundos, mientras que la versión fin
 
 En el caso concurrente, la versión inicial (Conc0) presentaba un desempeño muy deficiente con un tiempo de 740.903 segundos, debido a la creación y destrucción de hilos en cada iteración. En la primera mejora (Conc01), los hilos se mantuvieron vivos durante toda la ejecución y se introdujeron barreras para sincronizar las iteraciones, reduciendo el tiempo a 195.611 segundos (speedup ≈ 0.23x).
 
-Finalmente, en la segunda optimización concurrente (Conc02), se eliminaron mutexes y se redujeron las barreras innecesarias, logrando una mayor eficiencia. Esta versión alcanzó un tiempo de 106.513 segundos (speedup ≈ 0.42x). Aunque aún no supera a la versión serial final, representa un avance significativo frente a las versiones concurrentes anteriores.
+En la segunda optimización concurrente (Conc02), se eliminaron mutexes y se redujeron las barreras innecesarias, logrando una mayor eficiencia. Esta versión alcanzó un tiempo de minimo de 425s con 5 hilos, en la primera lamina del job20.txt. 
+Consiguiendo una disminucion de 115s con respecto a la version serial final. Con respecto a la iteracion concurrente 3,
+no fue tomada para la tabla que se encuentra a continuacion, pues esta optimizacion supuso un empeoramiento en el speedup y eficiencia (563.915s) .
 
 == Comparativa visual de las optimizaciones
 image:../design/Duracion frente a Iteracion.svg[]
