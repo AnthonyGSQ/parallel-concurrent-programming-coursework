@@ -1,4 +1,4 @@
-= Reporte de optimizaciones
+= Tarea03 Optimized
 :toc-title: Tabla de contenidos
 :experimental:
 :nofooter:
@@ -70,12 +70,12 @@ Esta tarea es la union de las optimizaciones de Tarea01 y Tarea02, asegurando el
 === Guía de Uso
 
 1. Compilar el Proyecto:
-- Navega a la carpeta `serial` y compila con `make`
+- Navega a la carpeta `optimized` y compila con `make`
 De esta manera se creara el ejecutable en la carpeta bin.
 Una vez compilado el proyecto, puedes ejecutarlo usando el siguiente comando:
 [source, bash]
 ----
-./bin/serial ./jobs/job###/job###.txt
+./bin/optimized ./jobs/job###/job###.txt
 ----
 
 Donde ### es el número del job a utilizar en el programa. Ejemplo:

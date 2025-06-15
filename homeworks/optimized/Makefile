@@ -1,3 +1,3 @@
 include ../../common/Makefile
 
-ARGS=./jobs/job003b/job003.txt
+ARGS=./jobs/job020-input/job020.txt

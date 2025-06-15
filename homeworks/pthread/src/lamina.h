@@ -20,12 +20,21 @@
  * parámetros a utilizar
  */ 
 typedef struct Lamina {
+    /**
+     * @brief cantidad de filas de la lamina actual
+     */
     uint64_t rows;
+    /**
+     * @brief cantidad de columnas de la lamina actual
+     */
     uint64_t columns;
     /**
      * @brief El valor de k utilizado en la simulación.
      */
     double k;
+    /**
+     * @brief tiempo en segundos que tardo en estabilizarse la lamina
+     */
     double time;
     /**
      * @brief Conductividad térmica del material.
@@ -42,8 +51,17 @@ typedef struct Lamina {
      * cuando las temperaturas ya no cambian significativamente entre pasos.
      */
     double thread_count;
+    /**
+     * @brief parametro que determina cuando una celda esta estabilizada
+     */
     double epsilon;
+    /**
+     * @brief matriz de las temperaturas actuales
+     */
     double **temperatures;
+    /**
+     * @brief matriz de las temperaturas futuras
+     */
     double **next_temperatures;
 } Lamina;
 /**
@@ -163,29 +181,8 @@ void plan_thread_distribution(Lamina *lamina,
 int starThreads(Lamina *lamina, file_struct *fileobj,
     public_data_t* public_data);
 /**
- * @brief Actualiza la matriz de temperaturas hasta estabilizarla
- * 
- * Recorre la matriz de temperaturas, actualizando cada celda hasta que todas
- * sean estables (que tengan una diferencia entre el futuro estado y el actual
- * menor a epislon). Intercambia las matrices `temperatures` y
- * next_temperatures` en cada iteración.
- * 
- * @param lamina Puntero a la estructura lamina
- * @param fileobj Puntero a la estructura encargada del manejo de archivos
- * @param public_data puntero a la estructura de datos compartidos entre hilos
- * 
- * @return EXIT_SUCCESS si estabilizo la lamina, EXIT_FAILURE si no
- * 
- * @note Si la simulación falla al finalizar, la función devuelve
- * `EXIT_FAILURE`.
- */
-/**
- * @brief Funcion encargada de iniciar y destruir todos los threads una sola vez
- * 
- * @param lamina Puntero a la estructura lamina
- * @param fileobj Puntero al struct encargado del manejo de archivos
- * @param public_data Puntero al struct de datos compartidos
- * @return EXIT_SUCCESS si no hubo fallos, EXIT_FAILURE en el caso contrario
+ * @brief funcion encargada de actualizar la lamina estado a estado
+ * @param data puntero al private data de cada thread
  */
 void* update_lamina(void* data);
 /**

@@ -1,0 +1,50 @@
+función report_file(lamina):
+    imprimir "tiempooo: %" PRIu64, lamina->k
+
+    inicializar text, temp, file_name, alternative_route como cadenas vacías
+
+    // Copiar el nombre del archivo binario
+    snprintf(file_name, tamaño de file_name, "%s", lamina->binary_file_name)
+
+    // Buscar la última '/' y el punto para obtener el nombre del archivo sin extensión
+    encontrar la última '/' en file_name
+    encontrar el punto en file_name
+    poner '\0' en el punto para eliminar la extensión
+
+    // Construir las rutas alternativas
+    snprintf(alternative_route, tamaño de alternative_route, "%s%s%s", lamina->base_route, lastSLash, ".tsv")
+    snprintf(temp, tamaño de temp, "%s%s%s%s", lamina->base_route, "tsv/", lastSLash, ".tsv")
+    // Intentar abrir el archivo en la carpeta "tsv"
+    lamina->report_file = fopen(temp, "w+")
+    si no se puede abrir el archivo:
+        imprimir "Error: could not open tsv file"
+        imprimir "Creating new tsv file"
+        // Intentar abrir en una ruta alternativa si el anterior falla
+        lamina->report_file = fopen(alternative_route, "w+")
+
+    // Preparar el texto a escribir en el archivo
+    snprintf(text, tamaño de text, "%s\t%" PRIu64 "\t%g\t%g\t%g\t", temp, lamina->time, lamina->conductivity, lamina->height, lamina->epsilon)
+
+    // Formatear el tiempo
+    format_time(lamina->k, text, tamaño de text)
+
+    imprimir "FINAL TEXT: %s", text
+
+    // Escribir en el archivo
+    fprintf(lamina->report_file, "%s", text)
+
+retornar EXIT_SUCCESS
+
+funcion void print_lamina(OBJETO lamina) {
+    imprimir la lamina;
+}
+funcion void delete_lamina(OBJETO lamina, OBJETO fileobj) {
+    SI existe lamina->file {
+        liberar lamina->file
+    }
+    SI existe lamina->report_file {
+        liberar lamina->report_file
+    }
+    liberar fileobj
+    retornar EXIT_SUCCESS
+}
