@@ -364,7 +364,6 @@ int updateWithOmp(Lamina *lamina, file_struct *fileobj,
             "private_data");
         return EXIT_FAILURE;
     }
-
     public_data->unstable_blocks = 1;
     public_data->estados = 0;
     public_data->current_offset = 0;
@@ -392,7 +391,6 @@ int updateWithOmp(Lamina *lamina, file_struct *fileobj,
             #pragma omp single
             {
                 public_data->estados++;
-
                 // Swap offsets
                 size_t temp = public_data->current_offset;
                 public_data->current_offset = public_data->next_offset;
@@ -480,10 +478,10 @@ void update_cell(Lamina *lamina, size_t row, size_t column, double *current_mat,
 int finish_simulation(Lamina * lamina, file_struct *fileobj) {
     // si falla el manejo del archivo de reporte, retorna EXIT_FAILURE
     // TODO(AnthonyGSQ): comentado para probar en el cluster
-    // int return_value = report_file(lamina, fileobj);
-    // if (return_value == EXIT_FAILURE) {
-    //     return EXIT_FAILURE;
-    // }
+     int return_value = report_file(lamina, fileobj);
+     if (return_value == EXIT_FAILURE) {
+         return EXIT_FAILURE;
+     }
     return EXIT_SUCCESS;
 }
 void print_lamina(Lamina* lamina) {

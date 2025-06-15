@@ -334,13 +334,13 @@ image:../design/ Duracion frente a iteracion job20.svg[job20comparation]
 
 El cambio de hilos de pthreads a OpenMP representa una modificación sustancial en la estrategia de paralelización utilizada en el programa. Pthreads proporciona un control detallado de los hilos, lo que permite una gestión más precisa de la sincronización y la comunicación entre ellos, pero también requiere una implementación más extensa y un manejo manual de múltiples aspectos del paralelismo. OpenMP, por otro lado, ofrece una abstracción más accesible y flexible mediante directivas en el código, lo que simplifica la paralelización y reduce la complejidad del desarrollo. Sin embargo, el impacto de esta transición en el rendimiento no es trivial y, por ello, es necesario realizar una comparativa que permita evaluar si existe una mejora significativa en términos de tiempo de ejecución, incremento de velocidad y eficiencia en el uso de recursos.
 
+Por temas de tiempo no pude recopilar los datos de la comparativa con y sin MPI del job020 entero, sin embargo, se espera que la version con MPI sea mas rapida que las versiones sin MPI, pues MPI permite el procesamiento de multiples laminas en paralelo, mientras que tareas anteriores solo permiten el procesamiento de una lamina a la vez. La tabla a continuacion muestra los resultados de la comparativa entre OpenMP, pthreads y serial con la primera lamina del job20.
+
 [%autowidth.stretch,options="header"]
 |===
-|Iter. |Etiqueta |Duración (s) |_Speedup_ |Eficiencia |Descripción corta
-|1* |Con02 |435.095 |1.00 |100% |Versión serial final
-|2 | | | | |  
-|3 | | | | |  
-|4* | | | | |  
-|5 | | | | |  
-|6 | | | | |  
+|Etiqueta   |Hilos |Duración (s) |_Speedup_ |Eficiencia |Descripción corta
+|Serial     |-     |540.319      |1.00      |100%       |Versión serial final (Tarea01)
+|Pthread    |4     |228.759      |2.36      |59.0%      |Versión concurrente con pthreads (Tarea02)
+|Optimized  |4     |84.410       |6.40      |160.1%     |Versión concurrente con pthreads optimizada (Tarea03)
+|Omp_mpi    |4     |120.341      |4.49      |112.4%     |Versión concurrente con OpenMP y MPI (Tarea04)
 |===
