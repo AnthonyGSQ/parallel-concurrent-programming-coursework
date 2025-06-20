@@ -172,4 +172,14 @@ class Mpi {
       throw Mpi::Error("could not receive " + type, *this);
     }
   }
+
+  public:
+    void barrier() {
+      if (MPI_Barrier(MPI_COMM_WORLD) != MPI_SUCCESS) {
+        throw Mpi::Error("could not wait barrier", *this);
+      }
+    }
+    inline static int wtime() {
+      return MPI_Wtime();
+    }
 };
