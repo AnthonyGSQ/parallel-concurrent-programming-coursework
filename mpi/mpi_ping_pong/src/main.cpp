@@ -26,11 +26,16 @@ int main(int argc, char* argv[]) {
 }
 
 void play_ping_pong(Mpi& mpi, const long delay) {
-  long ball;
+  long ball = 0;
+  const int other = !mpi.rank();
+  if (mpi.rank() == 0) {
+    std::cout << mpi.rank() << " serves " << ++ball << std::endl;
+    mpi.send(ball, 1);
+  }
   while (true) {
-    if () {
-      std::cout << mpi.rank() << ball << std::endl;
+    mpi.receive(ball, other);
+    std::cout << mpi.rank() << " serves " << ++ball << std::endl;
     usleep(1000 * delay);
-    }
+    mpi.send(ball, other);
   }
 }
