@@ -182,4 +182,13 @@ class Mpi {
     inline static int wtime() {
       return MPI_Wtime();
     }
+
+    /// Broadcast a scalar value to all processes
+    template <typename Type>
+    void broadcast(Type& value, const int fromProcess) {
+      if (MPI_Bcast(&value , 1, Mpi::map(value), fromProcess,
+          MPI_COMM_WORLD) != MPI_SUCCESS) {
+          throw Mpi::Error("could not broadcast", *this);
+      }
+    }
 };
