@@ -191,4 +191,13 @@ class Mpi {
           throw Mpi::Error("could not broadcast", *this);
       }
     }
+  public:
+  template <typename Type>
+    void reduce(const Type& value, Type& result, const int operation
+    , const int toProcess) {
+      if (MPI_Reduce(&value, &result, 1, Mpi::map(value),
+      operation, toProcess, MPI_COMM_WORLD) != MPI_SUCCESS) {
+        throw Mpi::Error("could not reduce", *this);
+      }
+    }
 };
