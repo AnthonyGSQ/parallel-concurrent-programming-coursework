@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <unistd.h>
 
 #include "Mpi.hpp"
 #include "UniformRandom.hpp"
@@ -23,21 +24,22 @@ int main(int argc, char* argv[]) {
 
 void generate_lucky_statistics(Mpi& mpi) {
   // TODO(you): Generate my lucky number
-  const int my_lucky_number = -1;
-
-  out1 << "my lucky number is " << my_lucky_number << std::endl;
+  const int my_lucky_number = UniformRandom<int>().between(0, 100);
+  // out1 << "my lucky number is " << my_lucky_number << std::endl;
 
   int all_min = -1;
   int all_max = -1;
   int all_sum = -1;
 
   // TODO(you): Update distributed statistics from processes' lucky numbers
-
+  mpi.allReduce(my_lucky_number, all_min, MPI_MIN);
+  mpi.allReduce(my_lucky_number, all_max, MPI_MAX);
+  mpi.allReduce(my_lucky_number, all_sum, MPI_SUM);
   const double all_average = static_cast<double>(all_sum) / mpi.size();
   out1 << "all minimum = " << all_min << std::endl;
   out1 << "all average = " << all_average << std::endl;
   out1 << "all maximum = " << all_max << std::endl;
-
+  usleep(10000 * mpi.rank());
   if (my_lucky_number == all_min) {
     out2 << "is the minimum (" << all_min << ")" << std::endl;
   }

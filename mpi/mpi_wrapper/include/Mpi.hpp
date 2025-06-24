@@ -200,4 +200,11 @@ class Mpi {
         throw Mpi::Error("could not reduce", *this);
       }
     }
+    template <typename Type>
+    void allReduce(const Type& value, Type& result, const int operation) {
+        if (MPI_Allreduce(&value, &result, 1, Mpi::map(value),
+        operation, MPI_COMM_WORLD) != MPI_SUCCESS) {
+          throw Mpi::Error("could not all reduce", *this);
+        }
+      }
 };
