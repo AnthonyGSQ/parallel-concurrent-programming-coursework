@@ -1,0 +1,15 @@
+= Filósofos comensales
+:experimental:
+:nofooter:
+:source-highlighter: pygments
+:sectnums:
+:stem: latexmath
+:toc:
+:xrefstyle: short
+
+Rastree la memoria y el procesamiento del siguiente programa link:https://docs.google.com/spreadsheets/d/1uTkoHOXj-ceW2aj02-KUPerCo_KYbd_TnXWIeR36S58/edit?usp=sharing[en una copia de esta hoja de cálculo^], la cual tiene precargado el programa. Exporte el rastreo a un PDF y agréguelo a su repositorio de ejemplos. ¿Qué trabajo realiza la función `mistery()`?
+
+[source,c,linenums]
+----
+include::src/mist.c[]
+----
