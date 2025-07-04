@@ -1,4 +1,7 @@
 procedure main()
+  shared can_access_medium := semaphore(1)
+  shared readr_count := 0
+  shared can_access_reader_count := semaphore(1)
   while true do
     case read_char() of
       'R': create_thread(reader)
@@ -9,9 +12,23 @@ procedure main()
 end procedure
 
 procedure reader()
+  wait(can_access_reader_count)
+  if ++count = 1 then
+    wait(can_access_medium)
+  end if
+  signal(can_access_reader_count)
+  signal(can_access_reader_count)
+  wait(can_access_medium)
   read()
+
+  wait(can_access_reader_count)
+    if --count == 0 then
+      signal(can_access_reader_count)
+    end if
 end procedure
 
 procedure writer()
+  wait(can_access_medium)
   write()
+  signal(can_access_medium)
 end procedure

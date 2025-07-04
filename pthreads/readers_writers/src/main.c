@@ -9,6 +9,7 @@
 
 typedef struct shared_data {
   size_t counter;
+  pthread_rwlock_t can_access_counter;
 } shared_data_t;
 
 void* reader(void* data);
@@ -19,8 +20,10 @@ int main() {
   int error = EXIT_SUCCESS;
   shared_data_t* shared_data = (shared_data_t*)calloc(1, sizeof(shared_data_t));
   if (shared_data) {
+    error = pthread_rwlock_init(&shared_data->can_access_counter, /*attr*/NULL);
     if (error == EXIT_SUCCESS) {
       error = create_threads(shared_data);
+      pthread_rwlock_destroy(&shared_data->can_access_counter);
     } else {
       fprintf(stderr, "error: could not create rwlock\n");
       error = 11;
@@ -80,14 +83,18 @@ int create_threads(shared_data_t* shared_data) {
 
 void* reader(void* data) {
   shared_data_t *shared_data = (shared_data_t*)data;
-  size_t value = shared_data->counter;
-  printf("Reader got %zu\n", value);
+  pthread_rwlock_rdlock(&shared_data->can_access_counter);
+    size_t value = shared_data->counter;
+    printf("Reader got %zu\n", value);
+  pthread_rwlock_unlock(&shared_data->can_access_counter);
   return NULL;
 }
 
 void* writer(void* data) {
   shared_data_t *shared_data = (shared_data_t*)data;
-  size_t value = ++shared_data->counter;
-  printf("Writer increased to %zu\n", value);
+  pthread_rwlock_wrlock(&shared_data->can_access_counter);
+    size_t value = ++shared_data->counter;
+    printf("Writer increased to %zu\n", value);
+  pthread_rwlock_unlock(&shared_data->can_access_counter);
   return NULL;
 }
