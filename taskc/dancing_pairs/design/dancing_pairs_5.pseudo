@@ -1,0 +1,32 @@
+procedure main()
+  shared woman_queue := semaphore(2)
+  shared man_queue := semaphore(2)
+  shared room_barrier :=  barrier(2)
+  read share const room_capacity as int
+  shared multiplex := semaphore(room_capacity * 2)
+  shared room
+  while read genre do
+    case genre of
+      'M': create_thread(male)
+      'W': create_thread(female)
+    end case
+  end while
+end procedure
+
+procedure male()
+  wait(man_queue)
+  wait(room_barrier)  // wait to exit room, optional, but tidy
+  wait(multiplex)     // wait for room capacity
+  signal(man_queue)
+  dance()
+  signal(multiplex)  // free room capacity
+end procedure
+
+procedure female()
+  wait(woman_queue)
+  wait(room_barrier)  // wait to exit room, optional, but tidy
+  wait(multiplex)     // wait for room capacity
+  signal(woman_queue)
+  dance()
+  signal(multiplex)  // free room capacity
+end procedure
