@@ -1,4 +1,8 @@
 procedure main()
+shared hydrogen_multiplex := semaphore(2)
+shared oxygen_multiplex := semaphore(1) // mutex
+shared device_barrier := semaphore()
+shared barrier device_barrier := semaphore()
   while read atom do
     case atom of
       'H': create_thread(hydrogen)
@@ -8,9 +12,17 @@ procedure main()
 end procedure
 
 procedure hydrogen()
+  wait(hydrogen_multiplex)
+  wait(device_barrier)  // wait to enter device
   bond()
+  wait(device_barrier)  // wait to exit device
+  signal(hydrogen_multiplex)
 end procedure
 
 procedure oxygen()
+  wait(oxygen_multiplex)
+  wait(device_barrier)  // wait to enter device
   bond()
+  wait(device_barrier)  // wait to exit device
+  signal(oxygen_multiplex)
 end procedure
