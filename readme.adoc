@@ -68,6 +68,23 @@ synchronization but without the constraint of a fixed size.
 |28 |link:openmp/omp_stats[omp_stats] | Class example | Statistical computations using OpenMP parallelism.
 |29 |link:mpi/mpi_hello[mpi_hello] | Class example | Basic MPI hello world example.
 |30 |link:mpi/wrapper[mpi_wrapper] | Class example | C++ wrapper class for MPI initialization and management.
+|31 |link:mpi/mpi_hybrid_distr_arg[hybrid_distr_arg] | Class example | MPI program that distributes command line arguments across processes.
+|32 |link:mpi/hybrid_distr_stdin[hybrid_distr_stdin] | Class example | MPI program that distributes standard input data across processes.
+|33 |link:mpi/send_recv_ord_sem[send_recv_ord_sem] | Class example | MPI point-to-point communication with ordered semaphore synchronization.
+|34 |link:mpi/send_recv_ord_itm[send_recv_ord_itm] | Class example | MPI point-to-point communication with ordered item synchronization.
+|35 |link:mpi/send_recv_urd[send_recv_urd] | Class example | MPI unordered point-to-point communication example.
+|36 |link:mpi/mpi_ping_pong[mpi_ping_pong] | Class example | MPI ping-pong communication simulation between two processes.
+|37 |link:mpi/mpi_relay_race[mpi_relay_race] | Class example | MPI relay race simulation with process coordination.
+|38 |link:mpi/hybrid_distr_bcast[hybrid_distr_bcast] | Class example | MPI broadcast communication with hybrid distribution.
+|39 |link:mpi/mpi_lucky_number_reduce[mpi_lucky_number_reduce] | Class example | MPI collective reduction operation to find lucky numbers.
+|40 |link:mpi/mpi_lucky_number_who[mpi_lucky_number_who] | Class example | MPI program to determine which process has the lucky number.
+|41 |link:mpi/dining_philosophers[dining_philosophers] | Class example | MPI implementation of the dining philosophers problem.
+|42 |link:pthreads/readers_writers[readers_writers] | Class example | Classic readers-writers problem implementation using pthreads.
+|43 |link:pthreads/readers_writers_rwlock[readers_writers_rwlock] | Class example | Readers-writers problem using read-write locks.
+|44 |link:pthreads/delayed_busy_wait[delayed_busy_wait] | Class example | Demonstrates busy waiting with configurable delays.
+|45 |link:pthreads/mist_cond_var[mist_cond_var] | Class example | Implementation using condition variables for thread synchronization.
+|46 |link:taskc/build_h2o[build_h2o] | Class example | Task-based simulation of water molecule formation (H2O).
+|47 |link:taskc/dancing_pairs[dancing_pairs] | Class example | Task-based simulation of dancing pairs synchronization problem.
 |===
 
 == Tasks
@@ -152,6 +169,9 @@ Herramienta de control de concurrencia que permite poner en espera a n hilos has
 Es una herramienta de control de concurrencia que permite a los hilos esperar hasta que se cumpla una condicion especifica, permitiendo que otros hilos puedan modificar el estado de la condicion y notificar a los hilos en espera.
 
 === Candado de lectura y escritura
+
+Es una herramienta de control de concurrencia que permite a varios hilos leer datos al mismo tiempo, pero solo permite que un hilo escriba en los datos a la vez, evitando condiciones de carrera.
+
 === Descomposicion
 
 Se refiere a la separacion de un trabajo en multiples tareas, facilitando el uso de concurrencia.
@@ -170,7 +190,13 @@ Es la relacion entre el tiempo de ejecucion de un programa tomando en cuenta la 
 de hilos utilizados y el tiempo de ejecucion del programa tomando en cuenta un solo hilo.
 
 === Comunicacion punto a punto entre procesos
+
+Es la comunicacion dada entre proceso A y proceso B, sin intervencion de otro proceso
+
 === Comunicacion colectiva entre procesos
+
+Es la comunicacion dada entre varios procesos
+
 === Reduccion
 
 Se refiere a la operacion de combinar los resultados de varios procesos en un solo resultado, por ejemplo, sumar los resultados de varios hilos en un solo resultado.
