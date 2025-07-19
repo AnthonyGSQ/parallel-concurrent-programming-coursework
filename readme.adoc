@@ -1,202 +1,199 @@
-= Paralela Anthony Sanchez Quiros
+= Parallel and Concurrent Programming - Anthony Sanchez Quiros
+
+Comprehensive academic coursework from a university-level Parallel and Concurrent Programming course. Features 47+ hands-on exercises and assignments covering POSIX pthreads, OpenMP, MPI, and task-based concurrency patterns. Includes implementations of classic synchronization problems (dining philosophers, producer-consumer, readers-writers), distributed computing algorithms, and progressive optimization projects from serial to highly parallel solutions. Demonstrates practical application of mutex, semaphores, condition variables, collective operations, and performance analysis techniques.
 
 == Pthreads
 
 [%autowidth]
 |===
 |# |Id |Type |Description
-|1 |link:pthreads/commented_examples[commented_examples] |Homework | Basic
-example of pthread_create.
-|2 |link:pthreads/recursive_hello[recursive_hello] |Homework | Recursive
-creating of threads.
-|3 |link:pthreads/invert[invert] |Class_example |Serial program that invert
-integer numbers gived in the standar entrance
-|4 |link:pthreads/recursive_hello/trace[recursive_hello_trace] |Homework |
-Memory trace of recursive_hello
-|5 |link:pthreads/hello_w[hello_w] |Homework | Creating and joining threads
-with cycle for
-|6 |link:pthreads/grandma_lottery[grandma_lottery] |Class_example |Serial
-program that invert integer numbers gived in the standar entrance
-|7 |link:pthreads/hello_iwi_pri[hello_iwi_pri] |Homework | Basic example of
-thread private data
-|8 |link:pthreads/hello_iwi_shr[hello_iwi_shr] |Homework | Basic example of
-thread public data
-|9 |link:pthreads/hello_order_busywait[hello_order_busywait] |Homework | Basic
-example of thread busy waiting
-|10 |link:pthreads/team_shot_put[team_shot_put] |Homework | The program takes as
-input n teams, each consisting of m athletes. Each athlete performs multiple
-throws, and their best attempt is recorded. The program uses threads to handle
-the execution efficiently. After all throws are processed, the team with the
-highest combined best throws is declared the winner.
-|11 |link:pthreads/create_thread_team[create_thread_team] |Class_example |
-Exercise to solve team_shot_put using pthreads teams instead of normal pthreads
-|12 |link:pthreads/race_position[race_position] |Homework | This program
-simulates a race condition among threads, where only one thread can reach
-position x, but the outcome is non-deterministic.
-|13 |link:pthreads/hello_order_semaphor[hello_order_semaphor] |Homework | 
-This program allow only one thread to print a greeting at the same time using
-a semaphore for the threads
-|14 |link:pthreads/birthday_pinata[birthday_pinata] |Class_example | This
-program simulates a birthday party scenario where all threads must hit the
-pinata until it breaks. The thread that breaks the piñata must announce it.
-|15 |link:pthreads/hello_order_cond_safe[hello_order_cond_safe] |Homework |
-A program that allows threads to print in order using conditional safe to avoid
-busy-waiting
-|16 |link:pthreads/building_tasks[building_tasks] |Class_Example | This exercise
-involves fixing a concurrent program that simulates task execution based on a
-dependency graph, ensuring that no worker thread starts before all its
-prerequisite tasks are completed.
-|17 |link:pthreads/prod_cons_bound[prod_cons_bound] | Homework |This exercise
-focuses on the bounded buffer problem, where a fixed-size buffer is shared
-between producer and consumer threads that must be synchronized to avoid
-overflows and underflows.
-|17 |link:pthreads/prod_cons_bound_mod[prod_cons_bound_mod] | Homework | This
-exercise addresses the unbounded buffer problem, where producer and consumer
-threads interact with a buffer that can grow dynamically, requiring
-synchronization but without the constraint of a fixed size.
-|18 |link:pthreads/prod_cons_unbound_cpp[prod_cons_unbound] | Homework | Producer-consumer problem with an unbounded buffer implemented in C++.
-|19 |link:taskc/network_simul_packet_loss[network_simul_packet_loss] | Class Example | Simulates network packet loss in a concurrent environment.
-|20 |link:taskc/network_simul_packet_loss2[network_simul_packet_loss2] | Class Example | Variation of the network packet loss simulation.
-|21 |link:taskc/network_simul_producers[network_simul_producers] | Class example | Simulates multiple producers in a network environment.
-|22 |link:taskc/network_simul_bounded[network_simul_bounded] | Class example | Simulates a bounded network buffer with concurrent producers and consumers.
-|23 |link:datap/amdahl_compare_ab[amdahl_compare_ab] | Homework | Compares speedup using Amdahl's Law.
-|24 |link:taskc/taskc_patterns[taskc_patterns] | Class Example | Examples of common concurrency patterns.
-|25 |link:openmp/omp_team[omp_team] | Class example | Example of team parallelism using OpenMP.
-|26 |link:openmp/omp_for[omp_for] | Class example | Example of parallel for loops using OpenMP.
-|26 |link:openmp/omp_several_for_stages[omp_several_for_stages] | Class example | Example of multiple parallel for stages with OpenMP.
-|27 |link:openmp/omp_mergesort[omp_mergesort] | Class example | Parallel mergesort implementation using OpenMP.
-|28 |link:openmp/omp_stats[omp_stats] | Class example | Statistical computations using OpenMP parallelism.
-|29 |link:mpi/mpi_hello[mpi_hello] | Class example | Basic MPI hello world example.
-|30 |link:mpi/wrapper[mpi_wrapper] | Class example | C++ wrapper class for MPI initialization and management.
-|31 |link:mpi/mpi_hybrid_distr_arg[hybrid_distr_arg] | Class example | MPI program that distributes command line arguments across processes.
-|32 |link:mpi/hybrid_distr_stdin[hybrid_distr_stdin] | Class example | MPI program that distributes standard input data across processes.
-|33 |link:mpi/send_recv_ord_sem[send_recv_ord_sem] | Class example | MPI point-to-point communication with ordered semaphore synchronization.
-|34 |link:mpi/send_recv_ord_itm[send_recv_ord_itm] | Class example | MPI point-to-point communication with ordered item synchronization.
-|35 |link:mpi/send_recv_urd[send_recv_urd] | Class example | MPI unordered point-to-point communication example.
-|36 |link:mpi/mpi_ping_pong[mpi_ping_pong] | Class example | MPI ping-pong communication simulation between two processes.
-|37 |link:mpi/mpi_relay_race[mpi_relay_race] | Class example | MPI relay race simulation with process coordination.
-|38 |link:mpi/hybrid_distr_bcast[hybrid_distr_bcast] | Class example | MPI broadcast communication with hybrid distribution.
-|39 |link:mpi/mpi_lucky_number_reduce[mpi_lucky_number_reduce] | Class example | MPI collective reduction operation to find lucky numbers.
-|40 |link:mpi/mpi_lucky_number_who[mpi_lucky_number_who] | Class example | MPI program to determine which process has the lucky number.
-|41 |link:mpi/dining_philosophers[dining_philosophers] | Class example | MPI implementation of the dining philosophers problem.
-|42 |link:pthreads/readers_writers[readers_writers] | Class example | Classic readers-writers problem implementation using pthreads.
-|43 |link:pthreads/readers_writers_rwlock[readers_writers_rwlock] | Class example | Readers-writers problem using read-write locks.
-|44 |link:pthreads/delayed_busy_wait[delayed_busy_wait] | Class example | Demonstrates busy waiting with configurable delays.
-|45 |link:pthreads/mist_cond_var[mist_cond_var] | Class example | Implementation using condition variables for thread synchronization.
-|46 |link:taskc/build_h2o[build_h2o] | Class example | Task-based simulation of water molecule formation (H2O).
-|47 |link:taskc/dancing_pairs[dancing_pairs] | Class example | Task-based simulation of dancing pairs synchronization problem.
+|1 |link:pthreads/commented_examples[commented_examples] |Homework | Basic example of pthread_create.
+|2 |link:pthreads/recursive_hello[recursive_hello] |Homework | Recursive creation of threads.
+|3 |link:pthreads/invert[invert] |Class_example |Serial program that inverts integer numbers given in the standard input.
+|4 |link:pthreads/recursive_hello/trace[recursive_hello_trace] |Homework | Memory trace of recursive_hello.
+|5 |link:pthreads/hello_w[hello_w] |Homework | Creating and joining threads with for cycle.
+|6 |link:pthreads/grandma_lottery[grandma_lottery] |Class_example |Serial program that inverts integer numbers given in the standard input.
+|7 |link:pthreads/hello_iw_pri[hello_iw_pri] |Homework | Basic example of thread private data.
+|8 |link:pthreads/hello_iw_shr[hello_iw_shr] |Homework | Basic example of thread shared data.
+|9 |link:pthreads/hello_order_busywait[hello_order_busywait] |Homework | Basic example of thread busy waiting.
+|10 |link:pthreads/team_shot_put[team_shot_put] |Homework | The program takes as input n teams, each consisting of m athletes. Each athlete performs multiple throws, and their best attempt is recorded. The program uses threads to handle the execution efficiently. After all throws are processed, the team with the highest combined best throws is declared the winner.
+|11 |link:pthreads/create_thread_team[create_thread_team] |Class_example | Exercise to solve team_shot_put using pthread teams instead of normal pthreads.
+|12 |link:pthreads/race_position[race_position] |Homework | This program simulates a race condition among threads, where only one thread can reach position x, but the outcome is non-deterministic.
+|13 |link:pthreads/hello_order_semaphor[hello_order_semaphor] |Homework | This program allows only one thread to print a greeting at the same time using a semaphore for the threads.
+|14 |link:pthreads/birthday_pinata[birthday_pinata] |Class_example | This program simulates a birthday party scenario where all threads must hit the pinata until it breaks. The thread that breaks the piñata must announce it.
+|15 |link:pthreads/hello_order_cond_safe[hello_order_cond_safe] |Homework | A program that allows threads to print in order using conditional safety to avoid busy-waiting.
+|16 |link:pthreads/building_tasks[building_tasks] |Class_Example | This exercise involves fixing a concurrent program that simulates task execution based on a dependency graph, ensuring that no worker thread starts before all its prerequisite tasks are completed.
+|17 |link:pthreads/prod_cons_bound[prod_cons_bound] | Homework |This exercise focuses on the bounded buffer problem, where a fixed-size buffer is shared between producer and consumer threads that must be synchronized to avoid overflows and underflows.
+|18 |link:pthreads/prod_cons_bound_mod[prod_cons_bound_mod] | Homework | This exercise addresses the unbounded buffer problem, where producer and consumer threads interact with a buffer that can grow dynamically, requiring synchronization but without the constraint of a fixed size.
+|19 |link:pthreads/prod_cons_unbound_cpp[prod_cons_unbound] | Homework | Producer-consumer problem with an unbounded buffer implemented in C++.
+|20 |link:pthreads/readers_writers[readers_writers] | Class example | Classic readers-writers problem implementation using pthreads.
+|21 |link:pthreads/readers_writers_rwlock[readers_writers_rwlock] | Class example | Readers-writers problem using read-write locks.
+|22 |link:pthreads/delayed_busy_wait[delayed_busy_wait] | Class example | Demonstrates busy waiting with configurable delays.
+|23 |link:pthreads/mist_cond_var[mist_cond_var] | Class example | Implementation using condition variables for thread synchronization.
 |===
 
-== Tasks
 
-[#autowidth]
+== OpenMP
+
+[%autowidth]
 |===
 |# |Id |Type |Description
-|1 |link:homeworks/serial[serial] | Tarea01 | Program that stabilizes the temperatures of an n x m sheet, processing one cell of the sheet at a time
-|2 |link:homeworks/pthread[pthread] | Tarea02 | Program that stabilizes the temperatures of an n x m sheet, processing multiple cells of the sheet at the same time.
-|3 |link:homeworks/optimized[optimided] | Tarea03 | Program that stabilizes the temperatures of an n x m sheet, processing multiple cells of the sheet at the same time, but with a more efficient algorithm than pthread homework version.
+|1 |link:omp/omp_team[omp_team] | Class example | Example of team parallelism using OpenMP.
+|2 |link:omp/omp_for[omp_for] | Class example | Example of parallel for loops using OpenMP.
+|3 |link:omp/omp_several_for_stages[omp_several_for_stages] | Class example | Example of multiple parallel for stages with OpenMP.
+|4 |link:omp/omp_mergesort[omp_mergesort] | Class example | Parallel mergesort implementation using OpenMP.
+|5 |link:omp/omp_stats[omp_stats] | Class example | Statistical computations using OpenMP parallelism.
 |===
 
-== Glosary
+== MPI (Message Passing Interface)
 
-=== Programacion serial
+[%autowidth]
+|===
+|# |Id |Type |Description
+|1 |link:mpi/mpi_hello[mpi_hello] | Class example | Basic MPI hello world example.
+|2 |link:mpi/mpi_wrapper[mpi_wrapper] | Class example | C++ wrapper class for MPI initialization and management.
+|3 |link:mpi/mpi_hybrid_distr_arg[hybrid_distr_arg] | Class example | MPI program that distributes command line arguments across processes.
+|4 |link:mpi/hybrid_distr_stdin[hybrid_distr_stdin] | Class example | MPI program that distributes standard input data across processes.
+|5 |link:mpi/send_recv_ord_sem[send_recv_ord_sem] | Class example | MPI point-to-point communication with ordered semaphore synchronization.
+|6 |link:mpi/send_recv_ord_itm[send_recv_ord_itm] | Class example | MPI point-to-point communication with ordered item synchronization.
+|7 |link:mpi/send_recv_urd[send_recv_urd] | Class example | MPI unordered point-to-point communication example.
+|8 |link:mpi/mpi_ping_pong[mpi_ping_pong] | Class example | MPI ping-pong communication simulation between two processes.
+|9 |link:mpi/mpi_relay_race[mpi_relay_race] | Class example | MPI relay race simulation with process coordination.
+|10 |link:mpi/hybrid_distr_bcast[hybrid_distr_bcast] | Class example | MPI broadcast communication with hybrid distribution.
+|11 |link:mpi/mpi_lucky_number_reduce[mpi_lucky_number_reduce] | Class example | MPI collective reduction operation to find lucky numbers.
+|12 |link:mpi/mpi_lucky_number_who[mpi_lucky_number_who] | Class example | MPI program to determine which process has the lucky number.
+|13 |link:mpi/dining_philosophers[dining_philosophers] | Class example | MPI implementation of the dining philosophers problem.
+|===
 
-Es un paradigma de programacion donde la realizacion de tareas es serial, es decir, se realiza primeramente tarea1 y hasta que no sea
-finalizada, no se prosigue con tarea2
+== Task-based Concurrency
+
+[%autowidth]
+|===
+|# |Id |Type |Description
+|1 |link:taskc/network_simul_packet_loss[network_simul_packet_loss] | Class Example | Simulates network packet loss in a concurrent environment.
+|2 |link:taskc/network_simul_packet_loss2[network_simul_packet_loss2] | Class Example | Variation of the network packet loss simulation.
+|3 |link:taskc/network_simul_producers[network_simul_producers] | Class example | Simulates multiple producers in a network environment.
+|4 |link:taskc/network_simul_bounded[network_simul_bounded] | Class example | Simulates a bounded network buffer with concurrent producers and consumers.
+|5 |link:taskc/taskc_patterns[taskc_patterns] | Class Example | Examples of common concurrency patterns.
+|6 |link:taskc/build_h2o[build_h2o] | Class example | Task-based simulation of water molecule formation (H2O).
+|7 |link:taskc/dancing_pairs[dancing_pairs] | Class example | Task-based simulation of dancing pairs synchronization problem.
+|===
+
+== Major Assignments
+
+[%autowidth]
+|===
+|# |Id |Type |Description
+|1 |link:homeworks/serial[serial] | Assignment 01 | Serial program that stabilizes the temperatures of an n x m sheet, processing one cell at a time.
+|2 |link:homeworks/pthread[pthread] | Assignment 02 | Parallel program that stabilizes temperatures using POSIX threads, processing multiple cells simultaneously.
+|3 |link:homeworks/optimized[optimized] | Assignment 03 | Optimized parallel program with more efficient algorithms than the pthread version.
+|4 |link:homeworks/omp_mpi[omp_mpi] | Assignment 04 | Implementation using OpenMP and MPI for distributed parallel processing.
+|5 |link:homeworks/omp_mpi_V2[omp_mpi_V2] | Assignment 05 | Enhanced version of the OpenMP/MPI implementation with performance improvements.
+|===
+
+== Performance Analysis
+
+[%autowidth]
+|===
+|# |Id |Type |Description
+|1 |link:datap/amdahl_compare_ab[amdahl_compare_ab] | Homework | Performance comparison and speedup analysis using Amdahl's Law.
+|===
 
 
-=== Programacion Concurrente
+== Glossary
 
-Es un paradigma de programacion que puede basarse en la programacion iperativa o funcional. A diferencia de la programacion serial, la concurrente puede realizar varias tareas a la vez. Un ejemplo seria, mientras tarea01 termina, ir realizando tarea2
+=== Serial Programming
 
+A programming paradigm where task execution is sequential, meaning task1 must be completed before proceeding to task2.
 
-=== Programacion paralela
+=== Concurrent Programming
 
-Se refiere a la programacion que es capaz de realizar varias tareas al mismo tiempo. Es decir, realizar tarea1 y tarea2 a la vez, en el mismo instante
+A programming paradigm that can be based on imperative or functional programming. Unlike serial programming, concurrent programming can perform multiple tasks at once. For example, while task01 is finishing, task2 can be started.
 
+=== Parallel Programming
 
-=== Concurrencia de tareas
+Refers to programming that is capable of performing multiple tasks simultaneously. That is, executing task1 and task2 at the same time, at the same instant.
 
-Se refiere a cuando varios hilos acceden a los mismos datos, esto puede generar problemas de condiciones de carreras.
+=== Task Concurrency
 
+Refers to when multiple threads access the same data, which can generate race condition problems.
 
-=== Paralelismo de datos
+=== Data Parallelism
 
-Se refiere a cuando un conjunto de datos es trabajado es dividido en fragmentos y cada fragmento es procesado en paralelo en distintas unidades de procesamiento
+Refers to when a dataset is divided into fragments and each fragment is processed in parallel on different processing units.
 
+=== Thread of Execution
 
-=== Hilo de ejecucion
+A thread of execution refers to an executor capable of performing tasks in parallel with other executors (threads).
 
-Un hilo de ejecucion se refiere a un ejecutante capaz de realizar tareas de forma paralela con otros ejecutantes (hilos).
-=== Indeterminismo
+=== Non-determinism
 
-El indeterminismo es cuando no se sabe que hilo terminara su trabajo primero, poniendo un ejemplo seria enviar 2 hilos a realizar exactamente la misma tarea. A veces el hilo 1 terminara primero, a veces sera el segundo.
+Non-determinism is when it's unknown which thread will finish its work first. For example, sending 2 threads to perform exactly the same task - sometimes thread 1 will finish first, sometimes thread 2.
 
+=== Private and Shared Memory
 
-=== Memoria privada y compartida
+Private memory refers to variables, data, and structs that only one thread has access to. Shared memory is that which multiple threads have access to.
 
-La memoria privada se refiere a las variables, datos, structs que solamente un hilo tiene acceso a ellos. Por otra parte la memoria compartida es aquella a la cual varios hilos tienen acceso.
+=== Busy Waiting
 
-=== Espera activa
+Refers to when threads are waiting for a condition to be met in order to perform their assigned task, but while waiting they consume CPU resources, severely slowing it down. This is the worst programming practice that can be performed.
 
-Se refiere a cuando los hilos estan esperando a que se cumpla x condicion para poder realizar la tarea que se les ha asignado, sin embargo mientras esperan consumen recursos de la CPU, ralentizandola gravemente, es la peor practica de programacion que se puede realizar.
+=== Race Condition
 
-=== Condicion de carrera
+A race condition is when n threads perform procedures based on data that is being read and modified concurrently, generating undesired non-deterministic results.
 
-La condicion de carrera es cuando n hilos realizan x procedimientos a partir de datos que estan siendo leidos y editados de manera concurrente, generando un indeterminismo de resultados no deseados.
+=== Concurrency Control
 
-=== Control de concurrencia
+A method that avoids busy waiting of threads, making them wait without consuming resources instead of waiting while consuming them. Threads can be said to "sleep".
 
-Es un metodo que evita la espera activa de hilos, haciendo que estos en lugar de esperar consumiendo recursos, esperen sin dicho consumo, se podria decir que los hilos se "duermen".
+=== Conditional Safety
 
-=== Seguridad condicional
+A concurrency control method that makes n threads "wait" until a certain condition is met.
 
-Es un metodo de control de concurrencia que hace "esperar" a n hilos hasta que se cumpla una determinada condicion.
+=== Mutual Exclusion
 
-=== Exclusion mutua
+A concurrency control tool that prevents more than one thread from accessing data, avoiding possible race conditions.
 
-Herramienta de control de concurrencia que evita que mas de un hilo acceda a x dato, evitando posibles condiciones de carrera.
+=== Semaphore
 
-=== Semaforo
+A concurrency control tool that allows n threads to perform an activity at the same time, sending a signal each time the semaphore frees one of the available spaces, allowing other threads to access the activity.
 
-Herramienta de control de concurrencia que le permite a n hilos poder realizar x actividad a la vez, enviando un signal cada que el semaforo vacia uno de los espacios que tiene disponibles, permmitiendole a otros hilos acceder a x actividad.
+=== Barrier
 
-=== Barrera
+A concurrency control tool that allows n threads to wait until all have reached the same point, without the need for busy waiting.
 
-Herramienta de control de concurrencia que permite poner en espera a n hilos hasta que todos hayan llegado al mismo punto, sin necesidad de una espera activa.
-=== Variable de condicion
+=== Condition Variable
 
-Es una herramienta de control de concurrencia que permite a los hilos esperar hasta que se cumpla una condicion especifica, permitiendo que otros hilos puedan modificar el estado de la condicion y notificar a los hilos en espera.
+A concurrency control tool that allows threads to wait until a specific condition is met, allowing other threads to modify the condition state and notify waiting threads.
 
-=== Candado de lectura y escritura
+=== Read-Write Lock
 
-Es una herramienta de control de concurrencia que permite a varios hilos leer datos al mismo tiempo, pero solo permite que un hilo escriba en los datos a la vez, evitando condiciones de carrera.
+A concurrency control tool that allows multiple threads to read data simultaneously, but only allows one thread to write to the data at a time, avoiding race conditions.
 
-=== Descomposicion
+=== Decomposition
 
-Se refiere a la separacion de un trabajo en multiples tareas, facilitando el uso de concurrencia.
+Refers to the separation of work into multiple tasks, facilitating the use of concurrency.
 
-=== Mapeo
+=== Mapping
 
-Se refiere a la asignacion de tareas a hilos, permitiendo que cada hilo realice una tarea especifica.
+Refers to the assignment of tasks to threads, allowing each thread to perform a specific task.
 
-=== Incremento de velocidad
+=== Speedup
 
-Se refiere a la mejoria en la cantidad de tiempo requerido para la finalizacion de un programa
+Refers to the improvement in the amount of time required for program completion.
 
-=== Eficiencia
+=== Efficiency
 
-Es la relacion entre el tiempo de ejecucion de un programa tomando en cuenta la cantidad
-de hilos utilizados y el tiempo de ejecucion del programa tomando en cuenta un solo hilo.
+The relationship between the execution time of a program considering the number of threads used and the execution time of the program using only one thread.
 
-=== Comunicacion punto a punto entre procesos
+=== Point-to-Point Process Communication
 
-Es la comunicacion dada entre proceso A y proceso B, sin intervencion de otro proceso
+Communication between process A and process B, without intervention from another process.
 
-=== Comunicacion colectiva entre procesos
+=== Collective Process Communication
 
-Es la comunicacion dada entre varios procesos
+Communication between multiple processes.
 
-=== Reduccion
+=== Reduction
 
-Se refiere a la operacion de combinar los resultados de varios procesos en un solo resultado, por ejemplo, sumar los resultados de varios hilos en un solo resultado.
+Refers to the operation of combining results from multiple processes into a single result, for example, summing the results of multiple threads into a single result.
